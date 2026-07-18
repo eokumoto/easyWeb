@@ -40,8 +40,6 @@ export function BrowserShell() {
     navigate(siteId ? { kind: "site", siteId } : { kind: "search", query: value.trim() });
   }
 
-  const helpPage = currentPage.kind === "site" ? currentPage.siteId : currentPage.kind;
-
   return (
     <main className="browser-shell">
       <BrowserToolbar
@@ -67,7 +65,9 @@ export function BrowserShell() {
         )}
       </div>
 
-      <HelpAssistant key={helpPage} page={helpPage} />
+      {currentPage.kind === "site" && currentPage.siteId === "healthplus" && (
+        <HelpAssistant key="healthplus" />
+      )}
     </main>
   );
 }
@@ -87,11 +87,6 @@ function BrowserHome({ onNavigate }: { onNavigate: (siteId: DemoSiteId) => void 
       </header>
 
       <section className="home-content" id="main-content">
-        <div className="welcome-copy">
-          <p className="eyebrow">Your favorite places</p>
-          <h1>Good morning!</h1>
-          <p className="welcome-message">Where would you like to go today?</p>
-        </div>
         <BookmarkGrid onNavigate={onNavigate} />
       </section>
     </div>

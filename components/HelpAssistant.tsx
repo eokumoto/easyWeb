@@ -1,41 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { DemoSiteId } from "@/lib/demoSites";
+import { type FormEvent, useEffect, useRef, useState } from "react";
+import {
+  answerHealthPlusQuestion,
+  healthPlusSuggestedQuestions,
+  type HealthPlusHelpAnswer,
+} from "@/lib/healthPlusData";
 
-type HelpPage = "home" | "search" | DemoSiteId;
-type HelpOption = { question: string; answer: string };
-
-// TEMPORARY: Scripted hackathon responses. Replace this content with the GPT-5.6
-// Responses API integration before submission; preserve these safety boundaries.
-const temporaryPageHelp: Record<HelpPage, HelpOption[]> = {
-  home: [
-    { question: "How do I open a website?", answer: "Choose one of the large bookmark cards. It will open here inside EasyWeb." },
-    { question: "What can I type in the address bar?", answer: "You can type a topic to search, or enter one of the demo addresses shown on your bookmarks." },
-  ],
-  search: [
-    { question: "How do I choose a result?", answer: "Choose the result whose name matches what you need. Every result on this demo search page stays inside EasyWeb." },
-    { question: "Are these results safe?", answer: "These results were selected for this controlled demo. In a real browser, EasyWeb would provide guidance but could not guarantee that every website is safe." },
-  ],
-  healthplus: [
-    { question: "How do I contact the clinic?", answer: "Call HealthPlus Clinic at (555) 014-2200. The clinic is open Monday through Friday, 8:00 AM to 5:00 PM." },
-    { question: "How do I make an appointment?", answer: "Call the clinic at (555) 014-2200 and ask for an appointment. EasyWeb has not booked or submitted anything for you." },
-  ],
-  pharmacy: [
-    { question: "How do I request a refill?", answer: "Call the pharmacy at (555) 018-4400 and keep your prescription bottle nearby. EasyWeb has not requested a refill for you." },
-    { question: "When is the pharmacy open?", answer: "The pharmacy is open today from 8:00 AM to 7:00 PM." },
-  ],
-  utility: [
-    { question: "When is this sample bill due?", answer: "The sample statement shows a due date of August 5 and a balance of $84.20." },
-    { question: "Can you pay this bill for me?", answer: "No. EasyWeb can explain the bill, but it cannot make payments or submit financial information. Call billing support at (555) 012-1000 for help." },
-  ],
-};
-
-export function HelpAssistant({ page }: { page: HelpPage }) {
+export function HelpAssistant() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<HelpOption | null>(null);
+  const [question, setQuestion] = useState("");
+  const [response, setResponse] = useState<HealthPlusHelpAnswer | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const options = temporaryPageHelp[page];
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -47,35 +24,84 @@ export function HelpAssistant({ page }: { page: HelpPage }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
+  function answer(questionToAnswer: string) {
+    const trimmedQuestion = questionToAnswer.trim();
+    if (!trimmedQuestion) return;
+    setQuestion(trimmedQuestion);
+    setResponse(answerHealthPlusQuestion(trimmedQuestion));
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    answer(question);
+  }
+
+  function resetQuestion() {
+    setQuestion("");
+    setResponse(null);
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  function showSection(sectionId: string) {
+    setIsOpen(false);
+    window.setTimeout(() => {
+      const section = document.getElementById(sectionId);
+      if (!section) return;
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      section.classList.add("help-highlight");
+      window.setTimeout(() => section.classList.remove("help-highlight"), 2600);
+    }, 80);
+  }
+
   return (
     <>
-      <button className="help-launcher" type="button" onClick={() => setIsOpen(true)} aria-haspopup="dialog">
+      <button aria-haspopup="dialog" className="help-launcher" onClick={() => setIsOpen(true)} type="button">
         <span className="help-icon" aria-hidden="true">?</span>
         Need Help?
       </button>
 
       {isOpen && (
         <div className="dialog-backdrop">
-          <section className="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
+          <section aria-labelledby="help-title" aria-modal="true" className="help-dialog" role="dialog">
             <div className="dialog-header">
               <div>
-                <h2 className="dialog-title" id="help-title">Page help</h2>
-                <p className="dialog-intro">Choose a question and I&apos;ll guide you one step at a time.</p>
+                <h2 className="dialog-title" id="help-title">Help with this page</h2>
+                <p className="dialog-intro">Ask about appointments, hours, insurance, services, or contact details.</p>
               </div>
               <button aria-label="Close help" className="dialog-close" onClick={() => setIsOpen(false)} ref={closeButtonRef} type="button">×</button>
             </div>
 
-            {selectedOption ? (
-              <>
-                <p className="help-response" role="status">{selectedOption.answer}</p>
-                <button className="help-reset" onClick={() => setSelectedOption(null)} type="button">Ask another question</button>
-              </>
-            ) : (
-              <div className="help-options">
-                {options.map((option) => (
-                  <button className="help-option" key={option.question} onClick={() => setSelectedOption(option)} type="button">{option.question}</button>
-                ))}
+            {response ? (
+              <div className="help-answer">
+                <p className="help-question">You asked: {question}</p>
+                <p aria-live="polite" className="help-response">{response.answer}</p>
+                <div className="help-answer-actions">
+                  {response.sectionId && (
+                    <button className="help-show" onClick={() => showSection(response.sectionId!)} type="button">
+                      Show me on the page
+                    </button>
+                  )}
+                  <button className="help-reset" onClick={resetQuestion} type="button">Ask another question</button>
+                </div>
               </div>
+            ) : (
+              <>
+                <form className="help-form" onSubmit={handleSubmit}>
+                  <label htmlFor="page-help-question">What would you like to know?</label>
+                  <div>
+                    <input autoComplete="off" id="page-help-question" onChange={(event) => setQuestion(event.target.value)} placeholder="For example: What are the hours?" ref={inputRef} type="text" value={question} />
+                    <button disabled={!question.trim()} type="submit">Ask</button>
+                  </div>
+                </form>
+                <div className="help-suggestions" aria-label="Suggested questions">
+                  <p>Or choose a question:</p>
+                  <div className="help-options">
+                    {healthPlusSuggestedQuestions.map((suggestion) => (
+                      <button className="help-option" key={suggestion} onClick={() => answer(suggestion)} type="button">{suggestion}</button>
+                    ))}
+                  </div>
+                </div>
+              </>
             )}
           </section>
         </div>

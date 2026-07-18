@@ -1,6 +1,7 @@
 "use client";
 
 import { demoSites, type DemoSiteId } from "@/lib/demoSites";
+import { healthPlusData } from "@/lib/healthPlusData";
 
 export function MockWebsite({ siteId }: { siteId: DemoSiteId }) {
   if (siteId === "healthplus") return <HealthPlusSite />;
@@ -25,30 +26,126 @@ function HealthPlusSite() {
     <article className="mock-site healthplus-site">
       <DemoBanner siteId="healthplus" />
       <header className="mock-site-header">
-        <div className="mock-logo healthplus-logo" aria-hidden="true">+</div>
-        <div>
-          <strong>HealthPlus Clinic</strong>
-          <span>Compassionate care, close to home</span>
+        <div className="healthplus-brand-group">
+          <div className="mock-logo healthplus-logo" aria-hidden="true">+</div>
+          <div>
+            <strong>HealthPlus Clinic</strong>
+            <span>Compassionate care, close to home</span>
+          </div>
         </div>
-        <span className="mock-phone">Call: (555) 014-2200</span>
+        <span className="mock-phone">Call: {healthPlusData.phone}</span>
       </header>
+      <nav className="healthplus-nav" aria-label="HealthPlus page sections">
+        <a href="#healthplus-appointments">Appointments</a>
+        <a href="#healthplus-hours">Office hours</a>
+        <a href="#healthplus-insurance">Insurance</a>
+        <a href="#healthplus-services">Services</a>
+        <a href="#healthplus-resources">Patient resources</a>
+        <a href="#healthplus-contact">Contact</a>
+      </nav>
       <section className="mock-hero healthplus-hero">
         <p className="mock-eyebrow">Welcome to HealthPlus</p>
-        <h1>We&apos;re here to help you feel your best.</h1>
-        <p>Primary care and helpful guidance from a team that knows you.</p>
-        <div className="information-pill">
-          To make an appointment, call <strong>(555) 014-2200</strong>.
+        <h1>Care for every stage of life.</h1>
+        <p>Primary care, preventive services, and patient resources from a team that knows your health history.</p>
+        <div className="healthplus-hero-actions">
+          <a className="healthplus-primary-link" href="#healthplus-appointments">Make an appointment</a>
+          <a className="healthplus-secondary-link" href="#healthplus-contact">Find our clinic</a>
         </div>
       </section>
-      <section className="mock-section" aria-labelledby="health-services">
-        <h2 id="health-services">How can we help?</h2>
-        <div className="service-grid">
-          <InfoCard icon="🩺" title="Primary care">Regular visits and wellness checks</InfoCard>
-          <InfoCard icon="🕘" title="Office hours">Monday–Friday, 8:00 AM–5:00 PM</InfoCard>
-          <InfoCard icon="📍" title="Our location">125 Garden Avenue, Springfield</InfoCard>
-        </div>
-      </section>
+
+      <aside className="clinic-notice" aria-label="Clinic notice">
+        <strong>Seasonal update:</strong> Flu shots are available during regular appointments. Call ahead for availability.
+      </aside>
+
+      <div className="healthplus-page-content">
+        <section aria-labelledby="appointments-title" className="healthplus-content-section" id={healthPlusData.appointment.sectionId}>
+          <SectionHeading eyebrow="Appointments" id="appointments-title" title="Plan your visit">
+            New and returning patients can schedule by phone with our care team.
+          </SectionHeading>
+          <div className="appointment-panel">
+            <div>
+              <h3>Call to schedule</h3>
+              <span className="large-phone-link">{healthPlusData.appointment.phone}</span>
+              <p>{healthPlusData.appointment.note}</p>
+            </div>
+            <ul className="visit-list">
+              <li>New patient visits</li><li>Annual wellness visits</li>
+              <li>Follow-up appointments</li><li>Same-day sick visits when available</li>
+            </ul>
+          </div>
+        </section>
+
+        <section aria-labelledby="hours-title" className="healthplus-content-section section-tinted" id="healthplus-hours">
+          <SectionHeading eyebrow="Before you visit" id="hours-title" title="Office hours" />
+          <div className="hours-layout">
+            <dl className="hours-list">
+              <div><dt>Monday–Friday</dt><dd>8:00 AM–5:00 PM</dd></div>
+              <div><dt>Saturday</dt><dd>9:00 AM–12:00 PM</dd></div>
+              <div><dt>Sunday</dt><dd>Closed</dd></div>
+            </dl>
+            <div className="after-hours-note">
+              <h3>Need care after hours?</h3>
+              <p>Call 911 for a life-threatening emergency. For other urgent concerns, call the clinic and follow the recorded instructions.</p>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="insurance-title" className="healthplus-content-section" id={healthPlusData.insurance.sectionId}>
+          <SectionHeading eyebrow="Billing and coverage" id="insurance-title" title="Insurance information">
+            We work with Medicare and many major insurance providers.
+          </SectionHeading>
+          <div className="insurance-layout">
+            <div className="insurance-list" aria-label="Commonly accepted insurance plans">
+              {healthPlusData.insurance.plans.map((plan) => <span key={plan}>✓ {plan}</span>)}
+            </div>
+            <p className="coverage-note"><strong>Before your visit:</strong> {healthPlusData.insurance.note}</p>
+          </div>
+        </section>
+
+        <section aria-labelledby="services-title" className="healthplus-content-section section-tinted" id={healthPlusData.services.sectionId}>
+          <SectionHeading eyebrow="What we offer" id="services-title" title="Primary care services" />
+          <div className="clinic-service-grid">
+            {healthPlusData.services.items.map((service) => (
+              <div className="clinic-service" key={service}><span aria-hidden="true">+</span><h3>{service}</h3></div>
+            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="resources-title" className="healthplus-content-section" id={healthPlusData.resources.sectionId}>
+          <SectionHeading eyebrow="Patient resources" id="resources-title" title="Information for your care" />
+          <div className="resource-grid">
+            <ResourceCard title="Prepare for your visit">Bring a photo ID, insurance card, medicine list, and any questions for your doctor.</ResourceCard>
+            <ResourceCard title="Prescription renewals">Contact your pharmacy first. Please allow up to two business days for routine renewals.</ResourceCard>
+            <ResourceCard title="Medical records">Call the clinic to ask for the records request form and processing information.</ResourceCard>
+          </div>
+        </section>
+
+        <section aria-labelledby="contact-title" className="healthplus-content-section healthplus-contact" id={healthPlusData.contact.sectionId}>
+          <SectionHeading eyebrow="Contact us" id="contact-title" title="HealthPlus Clinic" />
+          <div className="contact-grid">
+            <div><strong>Phone</strong><span>{healthPlusData.phone}</span></div>
+            <div><strong>Address</strong><span>{healthPlusData.address}</span></div>
+            <div><strong>Fax</strong><span>(555) 014-2299</span></div>
+            <div><strong>Parking</strong><span>Free patient parking behind the clinic</span></div>
+          </div>
+        </section>
+      </div>
     </article>
+  );
+}
+
+function SectionHeading({ children, eyebrow, id, title }: { children?: React.ReactNode; eyebrow: string; id: string; title: string }) {
+  return (
+    <div className="section-heading">
+      <p className="mock-eyebrow">{eyebrow}</p><h2 id={id}>{title}</h2>
+      {children && <p>{children}</p>}
+    </div>
+  );
+}
+
+function ResourceCard({ children, title }: { children: React.ReactNode; title: string }) {
+  return (
+    <div className="resource-card"><h3>{title}</h3><p>{children}</p></div>
   );
 }
 
