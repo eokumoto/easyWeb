@@ -105,7 +105,10 @@ export function BrowserShell() {
         currentPage={currentPage}
         key={`${currentPage.kind}-${address}`}
       />
-      <HelperMessageNotice onLeaveWebsite={() => navigate(homePage)} />
+      <HelperMessageNotice
+        currentAddress={address}
+        onLeaveWebsite={() => navigate(homePage)}
+      />
     </main>
   );
 }

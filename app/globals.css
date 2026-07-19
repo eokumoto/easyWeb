@@ -2788,6 +2788,22 @@ h1 {
   letter-spacing: -0.025em;
 }
 
+.helper-message-context {
+  display: grid;
+  gap: 3px;
+  margin-top: 13px;
+}
+
+.helper-message-context strong {
+  font-size: 19px;
+}
+
+.helper-message-context code {
+  color: #315f84;
+  font-family: inherit;
+  font-weight: 750;
+}
+
 .helper-message-notice blockquote {
   margin: 17px 0;
   padding: 16px 18px;

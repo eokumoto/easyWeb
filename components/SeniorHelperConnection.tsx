@@ -42,22 +42,36 @@ export function SeniorConnectionPanel() {
   );
 }
 
-export function HelperMessageNotice({ onLeaveWebsite }: { onLeaveWebsite: () => void }) {
+export function HelperMessageNotice({
+  currentAddress,
+  onLeaveWebsite,
+}: {
+  currentAddress: string;
+  onLeaveWebsite: () => void;
+}) {
   const { dismissResponse, state } = useHelperConnection();
-  const response = [...state.helperResponses].reverse().find((item) => !item.dismissed);
+  const response = [...state.helperResponses].reverse().find((item) => {
+    if (item.dismissed) return false;
+    const request = state.helpRequests.find((candidate) => candidate.id === item.requestId);
+    return request?.address === currentAddress;
+  });
 
   if (!response) return null;
-  const responseId = response.id;
+  const request = state.helpRequests.find((item) => item.id === response.requestId);
+  if (!request) return null;
 
   function leaveWebsite() {
-    dismissResponse(responseId);
     onLeaveWebsite();
   }
 
   return (
     <aside className="helper-message-notice" role="alert" aria-labelledby="helper-message-title">
       <p>Trusted helper message</p>
-      <h2 id="helper-message-title">{state.helperDisplayName} sent you a message</h2>
+      <h2 id="helper-message-title">{state.helperDisplayName} sent you a message about:</h2>
+      <section className="helper-message-context" aria-label="Website this message is about">
+        <strong>{request.websiteName}</strong>
+        <code>{request.address}</code>
+      </section>
       <blockquote>{response.message}</blockquote>
       <div>
         <button className="helper-message-leave" onClick={leaveWebsite} type="button">Leave website</button>

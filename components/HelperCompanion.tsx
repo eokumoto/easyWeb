@@ -185,7 +185,7 @@ function ConnectedCompanion({ onDisconnect }: { onDisconnect: () => void }) {
             {seniorName ? `Connected to ${seniorName}’s EasyWeb` : "Connected EasyWeb"}
           </h1>
           <p>
-            You will only see pages that {seniorName || "this person"} explicitly asks
+            You will only see pages that {seniorName} explicitly asks
             you to review. Normal browsing is not shared.
           </p>
         </div>
@@ -205,7 +205,7 @@ function ConnectedCompanion({ onDisconnect }: { onDisconnect: () => void }) {
         {activeRequests.length === 0 ? (
           <div className="empty-requests">
             <strong>No active help requests</strong>
-            <p>When {seniorName || "this person"} asks for help on a warning page, it will appear here.</p>
+            <p>When {seniorName} asks for help on a warning page, it will appear here.</p>
           </div>
         ) : (
           <div className="helper-request-list">
@@ -324,7 +324,7 @@ function HelperBookmarks({ seniorName }: { seniorName: string }) {
     <section className="helper-bookmarks" aria-labelledby="bookmarks-title">
       <div className="helper-bookmarks-heading">
         <div>
-          <p className="landing-eyebrow">Shared with the senior</p>
+          <p className="landing-eyebrow">Shared with {seniorName}</p>
           <h2 id="bookmarks-title">Bookmarks for {seniorName}</h2>
         </div>
         {!editor && <button onClick={openAddForm} type="button">Add bookmark</button>}
@@ -431,7 +431,7 @@ function HelperRequestCard({ request }: { request: HelpRequest }) {
         <p>{request.reason}</p>
       </div>
       <label htmlFor={`helper-message-${request.id}`}>
-        Message to {state.seniorDisplayName.trim() || "this person"}
+        Message to {state.seniorDisplayName.trim()}
       </label>
       <select
         id={`helper-message-${request.id}`}
