@@ -6,6 +6,7 @@ import {
   healthPlusSuggestedQuestions,
   type HealthPlusHelpAnswer,
 } from "@/lib/healthPlusData";
+import { matchScriptedIntent, type ScriptedIntent } from "@/lib/scriptedIntents";
 import type { BrowserPage } from "@/components/BrowserShell";
 
 type AssistantProfile = {
@@ -17,10 +18,10 @@ type AssistantProfile = {
 };
 
 const homeSuggestions = [
-  "Where will my bookmarks appear?",
-  "How do I try the demo scenarios?",
   "How do I search the web?",
   "How can I tell if a website looks suspicious?",
+  "What does my trusted helper do?",
+  "What should I do when a pop-up appears?",
 ];
 
 const vitaGlowSuggestions = [
@@ -38,10 +39,10 @@ const lookalikeSuggestions = [
 ];
 
 const externalSuggestions = [
-  "How do I return home?",
+  "Can EasyWeb read this page?",
+  "Why did this website not load?",
   "How do I open this website separately?",
   "What should I check before entering personal information?",
-  "How do I ask my trusted helper?",
 ];
 
 const genericSuggestions = [
@@ -49,85 +50,186 @@ const genericSuggestions = [
   "Can you explain this page?",
 ];
 
+const homeIntents: ScriptedIntent<HealthPlusHelpAnswer>[] = [
+  {
+    patterns: [
+      /\b(password|passcode|login|log in|sign in)\b/,
+      /\b(type|enter|share) (my |a |the )?(password|login)\b/,
+    ],
+    response: () => ({ answer: "Only enter a password when you are confident that you are on the correct official website. Check the website address carefully. If the page arrived through an unexpected message or looks unusual, leave and ask someone you trust." }),
+  },
+  {
+    patterns: [
+      /\b(card|credit card|debit card|payment|pay online|checkout)\b/,
+      /\b(can|should) i buy\b/,
+    ],
+    response: () => ({ answer: "Before entering card information, check the website address, seller contact information, return policy, and total price. Avoid continuing when the website creates pressure or shows several warning signs." }),
+  },
+  {
+    patterns: [
+      /\bphishing\b/,
+      /\bfake (login|sign in|website|site)\b/,
+      /\b(scammers?|thieves) cop(y|ies) websites?\b/,
+    ],
+    response: () => ({ answer: "Phishing is when someone pretends to be a trusted company or person to steal information such as passwords or card numbers. The message or website may look real, but the address or wording is often slightly different." }),
+  },
+  {
+    patterns: [
+      /\b(suspicious|scam|scammed|warning signs?)\b/,
+      /\b(can i trust|is .* trustworthy|does .* look safe|website safe|site safe)\b/,
+      /\bhow (do|can) i (know|tell) .* safe\b/,
+    ],
+    response: () => ({ answer: "Watch for pressure to act quickly, unusual website addresses, requests for passwords or payment information, missing contact details, and promises that seem too good to be true. When you are unsure, pause before entering personal information." }),
+  },
+  {
+    patterns: [
+      /\b(search|searching|find a website|find the website|find something online|search the web)\b/,
+      /\b(where|what box) (do|should|can) i type\b/,
+      /\b(search box|address box|address bar)\b/,
+    ],
+    response: () => ({ answer: "Type a website address or a few words into the large search box at the top, then select Go. For example, you could type ‘local pharmacy’ or ‘weather today.’" }),
+  },
+  {
+    patterns: [
+      /\b(my |trusted )?helper\b/,
+      /\bask (for |someone for )?help\b/,
+      /\b(can|does) .* see everything\b/,
+      /\bwhat can .* access\b/,
+    ],
+    response: () => ({ answer: "Your trusted helper can add useful bookmarks and respond when you ask for help. They cannot see your normal browsing or anything you type into forms." }),
+  },
+  {
+    patterns: [/\b(bookmark|bookmarks|saved websites?|website shortcuts?)\b/],
+    response: () => ({ answer: "Bookmarks are shortcuts to websites you use often. Your trusted helper can add, edit, or remove them for you." }),
+  },
+  {
+    patterns: [
+      /\b(pop up|popup|notifications?|press allow|choose allow|box appeared)\b/,
+      /\ballow (this|it|notifications?)\b/,
+    ],
+    response: () => ({ answer: "Read it slowly before choosing anything. Avoid allowing notifications, downloads, or personal-information requests from unfamiliar websites. Closing the pop-up is usually the safest choice when you are unsure." }),
+  },
+  {
+    patterns: [/\b(return|go|back) home\b/, /\bhome button\b/],
+    response: () => ({ answer: "Select Home in the EasyWeb toolbar to return to your bookmarks and the Try demo scenarios option." }),
+  },
+  {
+    patterns: [/\b(go back|back button|arrows?|forward button|previous page|next page)\b/],
+    response: () => ({ answer: "Select the left arrow to return to the previous page. Select the right arrow to move forward again after going back." }),
+  },
+];
+
+const vitaGlowIntents: ScriptedIntent<HealthPlusHelpAnswer>[] = [
+  {
+    patterns: [/\b(card|credit card|payment|pay|checkout|buy this|purchase)\b/],
+    response: () => ({ answer: "EasyWeb found several warning signs, so review them and consider asking a trusted helper before entering card information. This controlled demo never accepts, stores, or sends card details." }),
+  },
+  {
+    patterns: [/\b(refund|return policy|return rules?|money back)\b/],
+    response: () => ({ answer: "The refund information is inside Legal information near the bottom of the page. It says requests must be made within 7 days and that return shipping and handling fees are not refunded." }),
+  },
+  {
+    patterns: [/\b(owner|owns|ownership|company|contact|street address|customer support)\b/],
+    response: () => ({ answer: "The controlled VitaGlow page does not name the company owner or list a street address. It only mentions online customer support, which makes the seller harder to verify." }),
+  },
+  {
+    patterns: [/\b(countdown|timer|today only|urgency|urgent|pressure|rush|running out|expires?)\b/],
+    response: () => ({ answer: "The countdown and ‘today only’ offer create pressure to act quickly. Urgency can make it harder to review the seller, refund policy, and total cost carefully." }),
+  },
+  {
+    patterns: [/\b(exaggerated|claims?|promises?|miracle|too good to be true|younger|health results?|beauty results?)\b/],
+    response: () => ({ answer: "VitaGlow promises unusually dramatic health and appearance results in a short time. Claims that seem too good to be true are a reason to pause and look for reliable evidence." }),
+  },
+  {
+    patterns: [/\bwhat (do|should) i check\b/, /\bbefore (buying|i buy|purchasing)\b/],
+    response: () => ({ answer: "Before buying, check who owns the company, how to contact it, the full price, independent evidence for the product claims, and the refund policy. Do not let a countdown rush your decision." }),
+  },
+  {
+    patterns: [
+      /\b(warning|warning signs?|suspicious|scam|trust|safe)\b/,
+      /\bwhy (is|did|does) easyweb warn/,
+    ],
+    response: () => ({ answer: "EasyWeb noticed dramatic health and beauty promises, a countdown and today-only pressure, unclear company ownership, limited contact details, and refund terms that are hard to find. These signs do not prove the store is a scam, but they are reasons to slow down." }),
+  },
+];
+
+const lookalikeIntents: ScriptedIntent<HealthPlusHelpAnswer>[] = [
+  {
+    patterns: [/\b(password|login|log in|sign in|credentials?|enter my information)\b/],
+    response: () => ({ answer: "Do not enter your password on rob1ox.com. It uses a lookalike address, so leave the page or choose the familiar roblox.com destination before signing in." }),
+  },
+  {
+    patterns: [/\b(account.*(risk|danger|stolen|hacked)|risk.*account|could .* account)\b/],
+    response: () => ({ answer: "Entering a password on a lookalike page could put an account at risk. This does not prove the page is malicious, but EasyWeb recommends leaving without entering any login information." }),
+  },
+  {
+    patterns: [/\b(real|familiar|official|correct) (website|site|address)\b/, /\b(get|go|take me) to roblox\b/],
+    response: () => ({ answer: "Choose “Did you mean roblox.com?” in the EasyWeb warning. It opens the controlled familiar-address destination inside EasyWeb." }),
+  },
+  {
+    patterns: [/\b(different|difference|changed|number 1|letter l|address spelling|wrong with the address)\b/],
+    response: () => ({ answer: "rob1ox.com uses the number 1, while the familiar address roblox.com uses the letter l. Similar-looking characters can be easy to miss." }),
+  },
+  {
+    patterns: [/\blookalike (website|site|address|domain)\b/, /\bwhat is (a )?lookalike\b/],
+    response: () => ({ answer: "A lookalike website uses an address that closely resembles a familiar one, often by swapping similar-looking letters and numbers. Here, rob1ox.com uses 1 where roblox.com uses the letter l." }),
+  },
+  {
+    patterns: [/\b(warning|suspicious|scam|malicious|trust|safe)\b/, /\bwhy (is|did|does) easyweb warn/],
+    response: () => ({ answer: "EasyWeb is warning you because rob1ox.com closely resembles the familiar address roblox.com. This does not prove the page is malicious, but deceptive sites sometimes replace letters with similar-looking numbers." }),
+  },
+];
+
+const externalIntents: ScriptedIntent<HealthPlusHelpAnswer>[] = [
+  {
+    patterns: [/\b(read|summarize|understand|explain) (this|the) (page|website|site)\b/, /\bwhat (is|does) this page (say|show)\b/],
+    response: () => ({ answer: "Detailed page answers are currently available for selected EasyWeb demo pages. Support for understanding live websites is planned for a future version." }),
+  },
+  {
+    patterns: [/\b(not load|did not load|cannot load|blank|blocked|not display|cannot display|why .* load)\b/],
+    response: () => ({ answer: "Some websites do not allow themselves to appear inside EasyWeb because of their security settings. Use the visible ‘Having trouble viewing this page?’ option if you want to open the address separately." }),
+  },
+  {
+    patterns: [/\b(open .* separately|new tab|outside easyweb|open it directly)\b/],
+    response: () => ({ answer: "Choose ‘Having trouble viewing this page?’ above the website. EasyWeb will show an option to open the address in a new tab, but it will not do so until you choose that action." }),
+  },
+  {
+    patterns: [/\b(personal information|password|payment|card|enter information|before entering|what .* check)\b/],
+    response: () => ({ answer: "Check the website address carefully and consider whether you expected the request. Avoid entering passwords, payment details, or personal information if the page looks unusual or pressures you to act quickly." }),
+  },
+  {
+    patterns: [/\b(safe|trust|suspicious|scam)\b/],
+    response: () => ({ answer: "EasyWeb cannot verify that a live website is safe. Check that the address is exactly what you expected, and be cautious with pressure, unusual sign-in requests, or requests for personal or payment information." }),
+  },
+  {
+    patterns: [/\b(return|go|back) home\b/, /\bhome button\b/],
+    response: () => ({ answer: "Choose Home in the EasyWeb toolbar to return to your bookmarks and demo scenarios." }),
+  },
+];
+
 function answerHomeQuestion(question: string): HealthPlusHelpAnswer {
-  const normalized = question.trim().toLowerCase();
-
-  if (normalized.includes("bookmark")) {
-    return { answer: "Your personal bookmarks appear on EasyWeb Home. This prototype starts with an empty list so demo websites are kept separate." };
-  }
-  if (normalized.includes("demo") || normalized.includes("doctor") || normalized.includes("clinic") || normalized.includes("bill")) {
-    return { answer: "Choose Try demo scenarios on EasyWeb Home to open the controlled HealthPlus, Pharmacy, Utility, VitaGlow, and lookalike-address demonstrations." };
-  }
-  if (normalized.includes("search") || normalized.includes("find") || normalized.includes("website")) {
-    return { answer: "Use the large address box at the top. Type a website address or a few words about what you want to find, then choose Go." };
-  }
-  if (normalized.includes("suspicious") || normalized.includes("warning") || normalized.includes("safe")) {
-    return { answer: "Slow down if a site pressures you, makes dramatic promises, hides contact or refund details, or asks for payment information. Review any EasyWeb warnings and ask a trusted helper if you are unsure." };
-  }
-
-  return { answer: "I can help you understand personal bookmarks, open the controlled demo scenarios, search for a website, or recognize common warning signs." };
+  return matchScriptedIntent(question, homeIntents) ?? {
+    answer: "I’m not sure how to answer that yet. I can help with searching, bookmarks, browser controls, suspicious websites, passwords, payments, pop-ups, or your trusted helper.",
+  };
 }
 
 function answerVitaGlowQuestion(question: string): HealthPlusHelpAnswer {
-  const normalized = question.trim().toLowerCase();
-
-  if (normalized.includes("warning") || normalized.includes("why")) {
-    return { answer: "EasyWeb noticed dramatic health and beauty promises, a countdown and today-only pressure, unclear company ownership, limited contact details, and refund terms that are hard to find. These signs do not prove the store is a scam, but they are reasons to slow down." };
-  }
-  if (normalized.includes("refund") || normalized.includes("return")) {
-    return { answer: "The refund information is inside Legal information near the bottom of the page. It says requests must be made within 7 days and that return shipping and handling fees are not refunded." };
-  }
-  if (normalized.includes("own") || normalized.includes("company") || normalized.includes("contact")) {
-    return { answer: "The controlled VitaGlow page does not name the company owner or list a street address. It only mentions online customer support." };
-  }
-  if (normalized.includes("card") || normalized.includes("payment") || normalized.includes("safe") || normalized.includes("buy")) {
-    return { answer: "EasyWeb found several warning signs, so review them and consider asking a trusted helper before sharing payment information. This demo never accepts, stores, or sends card details." };
-  }
-
-  return { answer: "I can explain VitaGlow’s warning signs, refund information, company details, or why it is wise to pause before entering payment information." };
+  return matchScriptedIntent(question, vitaGlowIntents) ?? genericDemoAnswer();
 }
 
 function answerLookalikeQuestion(question: string): HealthPlusHelpAnswer {
-  const normalized = question.trim().toLowerCase();
-
-  if (normalized.includes("different") || normalized.includes("address") || normalized.includes("1") || normalized.includes("letter")) {
-    return { answer: "The address shown is rob1ox.com. It uses the number 1 where the familiar address roblox.com uses the letter l. Similar-looking characters can be easy to miss." };
-  }
-  if (normalized.includes("password") || normalized.includes("personal") || normalized.includes("payment") || normalized.includes("enter")) {
-    return { answer: "Do not enter a password, payment information, or personal information on this controlled lookalike page. Similar-looking addresses are a warning sign, so leave the page or ask a trusted helper if you are unsure." };
-  }
-  if (normalized.includes("real") || normalized.includes("familiar") || normalized.includes("get to") || normalized.includes("correct")) {
-    return { answer: "Choose “Did you mean roblox.com?” in the EasyWeb warning. It opens a controlled safe-destination page inside EasyWeb; it does not open an external website." };
-  }
-  if (normalized.includes("warning") || normalized.includes("why") || normalized.includes("safe")) {
-    return { answer: "EasyWeb is warning you because rob1ox.com closely resembles the familiar address roblox.com. This does not prove the page is malicious, but deceptive sites sometimes replace letters with similar-looking numbers." };
-  }
-
-  return { answer: "I can explain why the address looks suspicious, what character is different, why you should not enter a password, or how to choose the familiar address." };
+  return matchScriptedIntent(question, lookalikeIntents) ?? genericDemoAnswer();
 }
 
 function answerExternalQuestion(question: string): HealthPlusHelpAnswer {
-  const normalized = question.trim().toLowerCase();
-
-  if (normalized.includes("home") || normalized.includes("return") || normalized.includes("leave")) {
-    return { answer: "Choose Home in the EasyWeb toolbar to return to your bookmarks and demo scenarios." };
-  }
-  if (normalized.includes("separate") || normalized.includes("new tab") || normalized.includes("display") || normalized.includes("open")) {
-    return { answer: "Choose ‘Having trouble viewing this page?’ above the website. EasyWeb will show an option to open the address in a new tab. It will not open a new tab until you choose that action." };
-  }
-  if (normalized.includes("personal") || normalized.includes("password") || normalized.includes("payment") || normalized.includes("card") || normalized.includes("safe")) {
-    return { answer: "Check that the address is exactly what you expected. Be cautious with urgent requests, unexpected sign-in prompts, and requests for passwords, payment details, or personal information. A page loading does not mean EasyWeb has confirmed it is safe." };
-  }
-  if (normalized.includes("helper") || normalized.includes("trust") || normalized.includes("help")) {
-    return { answer: "Detailed helper requests are currently available on selected EasyWeb warning demos. For a live website, return home or contact your trusted helper directly if you are unsure." };
-  }
-
-  return { answer: "EasyWeb cannot currently read or summarize this live website. I can explain how to return home, open the site separately, or review common warning signs before sharing personal information." };
+  return matchScriptedIntent(question, externalIntents) ?? {
+    answer: "Detailed page answers are currently available for selected EasyWeb demo pages. Support for understanding live websites is planned for a future version.",
+  };
 }
 
-function genericAnswer(): HealthPlusHelpAnswer {
+function genericDemoAnswer(): HealthPlusHelpAnswer {
   return {
-    answer: "I can help explain what is shown on this page, but detailed answers are currently available only for selected EasyWeb demo pages.",
+    answer: "I couldn’t find an answer for that on this page. Try one of the suggested questions, or ask about the information currently shown.",
   };
 }
 
@@ -183,7 +285,7 @@ function getAssistantProfile(currentPage: BrowserPage): AssistantProfile {
   }
 
   return {
-    answer: genericAnswer,
+    answer: genericDemoAnswer,
     heading: "Help with this page",
     intro: "I can help explain what is shown on this page.",
     placeholder: "What would you like help understanding?",

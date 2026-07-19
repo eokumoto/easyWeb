@@ -1,3 +1,5 @@
+import { matchScriptedIntent, type ScriptedIntent } from "@/lib/scriptedIntents";
+
 export const healthPlusData = {
   phone: "(555) 014-2200",
   address: "125 Garden Avenue, Springfield",
@@ -40,51 +42,69 @@ export type HealthPlusHelpAnswer = {
   sectionId?: string;
 };
 
-type HelpRule = {
-  keywords: string[];
-  response: () => HealthPlusHelpAnswer;
-};
-
-const helpRules: HelpRule[] = [
+const helpRules: ScriptedIntent<HealthPlusHelpAnswer>[] = [
   {
-    keywords: ["appointment", "book", "schedule", "visit"],
+    patterns: [
+      /\b(appointment|schedule|book|booking|make a visit|change my visit)\b/,
+      /\b(can|will) easyweb (make|book|schedule|confirm)/,
+    ],
     response: () => ({
-      answer: `To make or change an appointment, call HealthPlus at ${healthPlusData.appointment.phone}. ${healthPlusData.appointment.note} EasyWeb has not booked or submitted anything for you.`,
+      answer: `To make or change an appointment, call HealthPlus at ${healthPlusData.appointment.phone}. ${healthPlusData.appointment.note} EasyWeb cannot submit, book, or confirm an appointment for you.`,
       sectionId: healthPlusData.appointment.sectionId,
     }),
   },
   {
-    keywords: ["hour", "open", "close", "saturday", "sunday", "weekend"],
+    patterns: [/\b(hours?|open|close|closing|saturday|sunday|weekend)\b/],
     response: () => ({
       answer: `HealthPlus is open ${healthPlusData.hours.weekdays}. It is also open ${healthPlusData.hours.saturday.toLowerCase()} and is ${healthPlusData.hours.sunday.toLowerCase()}.`,
       sectionId: "healthplus-hours",
     }),
   },
   {
-    keywords: ["insurance", "medicare", "coverage", "plan", "cost", "pay"],
+    patterns: [/\b(insurance|medicare|coverage|health plan|aetna|blue cross|unitedhealthcare)\b/],
     response: () => ({
       answer: `The clinic lists ${healthPlusData.insurance.plans.join(", ")} and other major plans. ${healthPlusData.insurance.note}`,
       sectionId: healthPlusData.insurance.sectionId,
     }),
   },
   {
-    keywords: ["service", "care", "offer", "diabetes", "blood pressure", "vaccine", "screening", "wellness"],
+    patterns: [
+      /\b(services?|care offered|treat|treatment|diabetes|blood pressure|vaccinations?|vaccines?|screenings?|wellness)\b/,
+      /\bwhat (do|does|can) (they|the clinic|healthplus) (offer|provide|help with)\b/,
+    ],
     response: () => ({
       answer: `HealthPlus offers ${healthPlusData.services.items.join(", ").toLowerCase()}. Call the clinic if you are unsure whether a service is available.`,
       sectionId: healthPlusData.services.sectionId,
     }),
   },
   {
-    keywords: ["form", "resource", "patient", "record", "medicine", "medication", "prepare", "bring"],
+    patterns: [
+      /\b(what to bring|should i bring|prepare for|preparing for|photo id|insurance card|medicine list|medication list)\b/,
+      /\b(what do i need|take with me|need for my visit)\b/,
+      /\b(patient resources?|medical records?|prescription renewals?)\b/,
+    ],
     response: () => ({
       answer: "The Patient Resources section has information about preparing for a visit, prescription renewals, and medical records. For a visit, bring your photo ID, insurance card, and current medicine list.",
       sectionId: healthPlusData.resources.sectionId,
     }),
   },
   {
-    keywords: ["contact", "call", "phone", "address", "location", "directions", "where"],
+    patterns: [
+      /\b(phone|phone number|telephone|call|contact number)\b/,
+      /\b(contact|reach) (healthplus|the clinic|clinic|them)\b/,
+    ],
     response: () => ({
-      answer: `Call HealthPlus at ${healthPlusData.phone}. The clinic is at ${healthPlusData.address}.`,
+      answer: `Call HealthPlus at ${healthPlusData.phone}.`,
+      sectionId: healthPlusData.contact.sectionId,
+    }),
+  },
+  {
+    patterns: [
+      /\b(location|located|address|directions)\b/,
+      /\bwhere (is|are) (healthplus|the clinic|they)\b/,
+    ],
+    response: () => ({
+      answer: `HealthPlus is located at ${healthPlusData.address}.`,
       sectionId: healthPlusData.contact.sectionId,
     }),
   },
@@ -98,12 +118,7 @@ export const healthPlusSuggestedQuestions = [
 ];
 
 export function answerHealthPlusQuestion(question: string): HealthPlusHelpAnswer {
-  const normalized = question.trim().toLowerCase();
-  const rule = helpRules.find(({ keywords }) =>
-    keywords.some((keyword) => normalized.includes(keyword)),
-  );
-
-  return rule?.response() ?? {
-    answer: `I can help you find appointments, office hours, insurance, services, patient resources, or contact information on this page. For anything else, call HealthPlus at ${healthPlusData.phone}.`,
+  return matchScriptedIntent(question, helpRules) ?? {
+    answer: "I couldn’t find an answer for that on this page. Try one of the suggested questions, or ask about the information currently shown.",
   };
 }
