@@ -1,11 +1,25 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { demoSites, type DemoSiteId } from "@/lib/demoSites";
 import { healthPlusData } from "@/lib/healthPlusData";
 
-export function MockWebsite({ siteId }: { siteId: DemoSiteId }) {
+export function MockWebsite({
+  onLeaveSite,
+  onNavigate,
+  siteId,
+}: {
+  onLeaveSite: () => void;
+  onNavigate: (siteId: DemoSiteId) => void;
+  siteId: DemoSiteId;
+}) {
   if (siteId === "healthplus") return <HealthPlusSite />;
   if (siteId === "pharmacy") return <PharmacySite />;
+  if (siteId === "vitaglow") return <VitaGlowSite onLeaveSite={onLeaveSite} />;
+  if (siteId === "robloxLookalike") {
+    return <LookalikeSite onLeaveSite={onLeaveSite} onNavigate={onNavigate} />;
+  }
+  if (siteId === "robloxSafe") return <RobloxSafeDestination />;
   return <UtilitySite />;
 }
 
@@ -214,6 +228,264 @@ function UtilitySite() {
           <InfoCard icon="🕘" title="Support hours">Monday–Friday, 7:30 AM–6:00 PM</InfoCard>
           <InfoCard icon="🧾" title="Have your bill nearby">A representative may ask for the sample account number</InfoCard>
         </div>
+      </section>
+    </article>
+  );
+}
+
+function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
+  const [secondsLeft, setSecondsLeft] = useState(9 * 60 + 47);
+  const [showCheckoutWarning, setShowCheckoutWarning] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [helpRequested, setHelpRequested] = useState(false);
+  const checkoutRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+
+  function continueToCheckout() {
+    setShowCheckout(true);
+    setShowCheckoutWarning(false);
+    window.setTimeout(() => checkoutRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
+  }
+
+  return (
+    <article className="mock-site vitaglow-site">
+      <DemoBanner siteId="vitaglow" />
+
+      <aside className="safety-review" aria-labelledby="safety-review-title">
+        <div className="safety-review-heading">
+          <span aria-hidden="true">!</span>
+          <div>
+            <p>EasyWeb safety review</p>
+            <h1 id="safety-review-title">Several warning signs found</h1>
+          </div>
+        </div>
+        <p>
+          This does not prove the website is a scam, but it is wise to slow down
+          and review these concerns before buying.
+        </p>
+        <ul>
+          <li>It promises unusually dramatic health and appearance results.</li>
+          <li>A countdown and “today only” message pressure you to act quickly.</li>
+          <li>It is not clear who owns the company or where it is located.</li>
+          <li>Contact details are limited, and the refund rules are hard to find.</li>
+        </ul>
+      </aside>
+
+      <header className="vitaglow-header">
+        <a className="vitaglow-brand" href="#vitaglow-main">VitaGlow</a>
+        <nav aria-label="VitaGlow sections">
+          <a href="#benefits">Benefits</a>
+          <a href="#stories">Success stories</a>
+          <a href="#vitaglow-footer">Support</a>
+        </nav>
+        <button onClick={() => setShowCheckoutWarning(true)} type="button">Order now</button>
+      </header>
+
+      <main id="vitaglow-main">
+        <section className="vitaglow-hero">
+          <div className="vitaglow-copy">
+            <p className="vitaglow-kicker">The wellness secret everyone is talking about</p>
+            <h2>Look younger and feel years healthier in just 14 days</h2>
+            <p className="vitaglow-claim">
+              Our exclusive Renewal Drops claim to erase wrinkles, restore energy,
+              ease joint discomfort, and support total-body renewal—all with one
+              daily serving.
+            </p>
+            <div className="vitaglow-offer">
+              <strong>Today only: 70% off your first bottle</strong>
+              <span>Special price expires in</span>
+              <time aria-label={`${minutes} minutes and ${seconds} seconds remaining`}>
+                {minutes}:{seconds}
+              </time>
+            </div>
+            <button className="vitaglow-order" onClick={() => setShowCheckoutWarning(true)} type="button">
+              Claim today&apos;s offer — $29.95
+            </button>
+            <small>Regularly $99.95. Shipping added at checkout.</small>
+          </div>
+          <div className="vitaglow-product" aria-label="VitaGlow Renewal Drops bottle illustration">
+            <span>VitaGlow</span>
+            <strong>RENEWAL<br />DROPS</strong>
+            <small>30 mL</small>
+          </div>
+        </section>
+
+        <section className="vitaglow-benefits" id="benefits" aria-labelledby="benefits-title">
+          <p>One bottle. Total transformation.</p>
+          <h2 id="benefits-title">Results they say you can see and feel</h2>
+          <div>
+            <article><strong>14 days</strong><span>to visibly younger-looking skin</span></article>
+            <article><strong>All day</strong><span>energy without changing your routine</span></article>
+            <article><strong>One dropper</strong><span>for complete wellness support</span></article>
+          </div>
+          <p className="vitaglow-disclaimer">Product statements shown are fictional demo claims and have not been evaluated.</p>
+        </section>
+
+        <section className="vitaglow-stories" id="stories" aria-labelledby="stories-title">
+          <h2 id="stories-title">“I finally feel like myself again.”</h2>
+          <p>— “Martha, 68,” sample promotional story</p>
+          <button onClick={() => setShowCheckoutWarning(true)} type="button">Get my bottle</button>
+        </section>
+
+        {showCheckout && (
+          <section className="simulated-checkout" ref={checkoutRef} aria-labelledby="checkout-title">
+            <p className="checkout-demo-label">Simulated checkout — no payment can be made</p>
+            <h2 id="checkout-title">Card details</h2>
+            <p>
+              These fields are disabled. EasyWeb does not accept, store, validate,
+              or transmit card information in this demo.
+            </p>
+            <div className="simulated-card-fields" aria-label="Disabled sample card fields">
+              <label>Card number<input disabled placeholder="Card entry disabled" type="text" /></label>
+              <label>Name on card<input disabled placeholder="Card entry disabled" type="text" /></label>
+              <label>Expiration<input disabled placeholder="MM / YY" type="text" /></label>
+              <label>Security code<input disabled placeholder="CVV" type="text" /></label>
+            </div>
+            <button disabled type="button">Place order — disabled demo</button>
+          </section>
+        )}
+      </main>
+
+      <footer className="vitaglow-footer" id="vitaglow-footer">
+        <strong>VitaGlow Customer Care</strong>
+        <span>Online support only. Company ownership and street address not listed.</span>
+        <details>
+          <summary>Legal information</summary>
+          <p>Refund requests must be made within 7 days. Return shipping and handling fees are not refunded.</p>
+        </details>
+      </footer>
+
+      {showCheckoutWarning && (
+        <div className="checkout-warning-backdrop">
+          <section className="checkout-warning-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-warning-title">
+            <span className="checkout-warning-icon" aria-hidden="true">!</span>
+            <p className="checkout-warning-eyebrow">Pause before continuing</p>
+            <h2 id="checkout-warning-title">This website is asking for payment information</h2>
+            <p>
+              EasyWeb found several warning signs. Review the concerns above before
+              deciding whether to continue. This does not prove the website is a scam.
+            </p>
+            <div className="checkout-warning-actions">
+              <button className="warning-leave" onClick={onLeaveSite} type="button">Leave this website</button>
+              <button className="warning-continue" onClick={continueToCheckout} type="button">Continue anyway</button>
+              <button className="warning-helper" onClick={() => setHelpRequested(true)} type="button">Ask my helper</button>
+            </div>
+            {helpRequested && (
+              <p className="helper-request-confirmation" role="status">
+                Help request created. Your helper can review it later.
+              </p>
+            )}
+          </section>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function LookalikeSite({
+  onLeaveSite,
+  onNavigate,
+}: {
+  onLeaveSite: () => void;
+  onNavigate: (siteId: DemoSiteId) => void;
+}) {
+  const [helpRequested, setHelpRequested] = useState(false);
+
+  return (
+    <article className="mock-site lookalike-site">
+      <DemoBanner siteId="robloxLookalike" />
+
+      <section className="lookalike-warning" aria-labelledby="lookalike-warning-title">
+        <div className="lookalike-warning-heading">
+          <span aria-hidden="true">!</span>
+          <div>
+            <p>EasyWeb address warning</p>
+            <h1 id="lookalike-warning-title">Several warning signs found</h1>
+          </div>
+        </div>
+        <h2>This website address is very similar to a familiar website.</h2>
+        <div className="address-comparison" aria-label="Comparison of rob1ox.com and roblox.com">
+          <div>
+            <span>Address you opened</span>
+            <strong>rob<mark>1</mark>ox.com</strong>
+          </div>
+          <div>
+            <span>Familiar address</span>
+            <strong>rob<em>l</em>ox.com</strong>
+          </div>
+        </div>
+        <p className="character-explanation">
+          The address you opened uses the <strong>number 1</strong> instead of the
+          <strong> letter l</strong>. Deceptive websites sometimes use similar-looking
+          letters and numbers. This does not prove the page is malicious, but it is
+          an important reason to stop and check.
+        </p>
+        <div className="lookalike-do-not-enter">
+          <strong>Do not enter a password, payment information, or personal information on this page.</strong>
+        </div>
+        <div className="lookalike-actions">
+          <button className="lookalike-safe-action" onClick={() => onNavigate("robloxSafe")} type="button">
+            Did you mean roblox.com?
+          </button>
+          <button className="lookalike-leave-action" onClick={onLeaveSite} type="button">
+            Leave this website
+          </button>
+          <button className="lookalike-helper-action" onClick={() => setHelpRequested(true)} type="button">
+            Ask my helper
+          </button>
+        </div>
+        {helpRequested && (
+          <p className="helper-request-confirmation" role="status">
+            Help request created. Your helper can review this address warning later.
+          </p>
+        )}
+      </section>
+
+      <section className="lookalike-login" aria-labelledby="lookalike-login-title">
+        <div className="lookalike-login-card">
+          <p>Account notice</p>
+          <h2 id="lookalike-login-title">Verify your account now</h2>
+          <span>Your access may be limited unless you sign in today.</span>
+          <div className="lookalike-login-fields" aria-label="Disabled demo login fields">
+            <label>
+              Username or email
+              <input disabled placeholder="Entry disabled by EasyWeb" type="text" />
+            </label>
+            <label>
+              Password
+              <input disabled placeholder="Entry disabled by EasyWeb" type="password" />
+            </label>
+          </div>
+          <button disabled type="button">Sign in — disabled demo</button>
+          <small>This controlled demonstration cannot collect or submit login information.</small>
+        </div>
+      </section>
+    </article>
+  );
+}
+
+function RobloxSafeDestination() {
+  return (
+    <article className="mock-site safe-destination-site">
+      <DemoBanner siteId="robloxSafe" />
+      <section className="safe-destination-content">
+        <span className="safe-destination-icon" aria-hidden="true">✓</span>
+        <p className="mock-eyebrow">Controlled safe destination</p>
+        <h1>You chose the familiar address</h1>
+        <strong>roblox.com</strong>
+        <p>
+          This EasyWeb demo stays inside the browser shell. It confirms the spelling
+          difference without loading an external website or collecting information.
+        </p>
       </section>
     </article>
   );

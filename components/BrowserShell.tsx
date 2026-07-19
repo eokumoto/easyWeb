@@ -59,15 +59,22 @@ export function BrowserShell() {
 
       <div className="browser-viewport" key={refreshKey}>
         {currentPage.kind === "home" && <BrowserHome onNavigate={navigateToSite} />}
-        {currentPage.kind === "site" && <MockWebsite siteId={currentPage.siteId} />}
+        {currentPage.kind === "site" && (
+          <MockWebsite
+            onLeaveSite={() => navigate(homePage)}
+            onNavigate={navigateToSite}
+            siteId={currentPage.siteId}
+          />
+        )}
         {currentPage.kind === "search" && (
           <SearchResults query={currentPage.query} onNavigate={navigateToSite} />
         )}
       </div>
 
-      {currentPage.kind === "site" && currentPage.siteId === "healthplus" && (
-        <HelpAssistant key="healthplus" />
-      )}
+      <HelpAssistant
+        currentPage={currentPage}
+        key={`${currentPage.kind}-${address}`}
+      />
     </main>
   );
 }

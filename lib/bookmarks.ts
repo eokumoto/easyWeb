@@ -40,12 +40,19 @@ export const defaultBookmarks: Bookmark[] = [
     icon: "⚡",
     color: "#fff4d9",
   },
+  {
+    id: "vitaglow-shop",
+    label: "VitaGlow Shop",
+    url: "shop.vitaglow.demo",
+    destination: "vitaglow",
+    icon: "VG",
+    color: "#f7e8f1",
+  },
 ];
 
-// Version 2 intentionally replaces the original external-link bookmarks with
-// controlled destinations that remain inside the EasyWeb browser shell.
-const STORAGE_KEY = "easyweb.bookmarks.v2";
-const demoSiteIds: DemoSiteId[] = ["healthplus", "pharmacy", "utility"];
+// Version 3 adds the controlled Phase 2 shopping scenario to the homepage.
+const STORAGE_KEY = "easyweb.bookmarks.v3";
+const demoSiteIds: DemoSiteId[] = ["healthplus", "pharmacy", "utility", "vitaglow"];
 
 function isBookmark(value: unknown): value is Bookmark {
   if (!value || typeof value !== "object") return false;

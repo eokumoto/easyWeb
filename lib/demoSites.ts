@@ -17,6 +17,24 @@ export const demoSites = {
     shortName: "Utility Billing",
     address: "billing.utility.demo",
   },
+  vitaglow: {
+    id: "vitaglow",
+    name: "VitaGlow Wellness Shop",
+    shortName: "VitaGlow",
+    address: "shop.vitaglow.demo",
+  },
+  robloxLookalike: {
+    id: "robloxLookalike",
+    name: "Lookalike Address Example",
+    shortName: "Address Warning",
+    address: "rob1ox.com",
+  },
+  robloxSafe: {
+    id: "robloxSafe",
+    name: "Familiar Address Destination",
+    shortName: "roblox.com",
+    address: "roblox.com",
+  },
 } as const;
 
 export type DemoSiteId = keyof typeof demoSites;

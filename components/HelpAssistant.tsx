@@ -6,8 +6,157 @@ import {
   healthPlusSuggestedQuestions,
   type HealthPlusHelpAnswer,
 } from "@/lib/healthPlusData";
+import type { BrowserPage } from "@/components/BrowserShell";
 
-export function HelpAssistant() {
+type AssistantProfile = {
+  answer: (question: string) => HealthPlusHelpAnswer;
+  heading: string;
+  intro: string;
+  placeholder: string;
+  suggestions: readonly string[];
+};
+
+const homeSuggestions = [
+  "Help me find my doctor’s website",
+  "Where can I pay my electric bill?",
+  "How do I search the web?",
+  "How can I tell if a website looks suspicious?",
+];
+
+const vitaGlowSuggestions = [
+  "Why is EasyWeb warning me?",
+  "Can I find the refund policy?",
+  "Who owns this company?",
+  "Is it safe to enter my card?",
+];
+
+const lookalikeSuggestions = [
+  "Why is EasyWeb warning me?",
+  "What is different about this address?",
+  "Should I enter my password?",
+  "How do I get to the real website?",
+];
+
+const genericSuggestions = [
+  "What can EasyWeb help me with?",
+  "Can you explain this page?",
+];
+
+function answerHomeQuestion(question: string): HealthPlusHelpAnswer {
+  const normalized = question.trim().toLowerCase();
+
+  if (normalized.includes("doctor") || normalized.includes("clinic")) {
+    return { answer: "Choose the My Doctor bookmark on EasyWeb Home to open the controlled HealthPlus Clinic website." };
+  }
+  if (normalized.includes("electric") || normalized.includes("bill") || normalized.includes("utility")) {
+    return { answer: "Choose the Electric Bill bookmark on EasyWeb Home to open the controlled utility billing demo." };
+  }
+  if (normalized.includes("search") || normalized.includes("find") || normalized.includes("website")) {
+    return { answer: "Use the large address box at the top. Type a website address or a few words about what you want to find, then choose Go." };
+  }
+  if (normalized.includes("suspicious") || normalized.includes("warning") || normalized.includes("safe")) {
+    return { answer: "Slow down if a site pressures you, makes dramatic promises, hides contact or refund details, or asks for payment information. Review any EasyWeb warnings and ask a trusted helper if you are unsure." };
+  }
+
+  return { answer: "I can help you use the bookmarks on EasyWeb Home, search for a website, or understand common website warning signs." };
+}
+
+function answerVitaGlowQuestion(question: string): HealthPlusHelpAnswer {
+  const normalized = question.trim().toLowerCase();
+
+  if (normalized.includes("warning") || normalized.includes("why")) {
+    return { answer: "EasyWeb noticed dramatic health and beauty promises, a countdown and today-only pressure, unclear company ownership, limited contact details, and refund terms that are hard to find. These signs do not prove the store is a scam, but they are reasons to slow down." };
+  }
+  if (normalized.includes("refund") || normalized.includes("return")) {
+    return { answer: "The refund information is inside Legal information near the bottom of the page. It says requests must be made within 7 days and that return shipping and handling fees are not refunded." };
+  }
+  if (normalized.includes("own") || normalized.includes("company") || normalized.includes("contact")) {
+    return { answer: "The controlled VitaGlow page does not name the company owner or list a street address. It only mentions online customer support." };
+  }
+  if (normalized.includes("card") || normalized.includes("payment") || normalized.includes("safe") || normalized.includes("buy")) {
+    return { answer: "EasyWeb found several warning signs, so review them and consider asking a trusted helper before sharing payment information. This demo never accepts, stores, or sends card details." };
+  }
+
+  return { answer: "I can explain VitaGlow’s warning signs, refund information, company details, or why it is wise to pause before entering payment information." };
+}
+
+function answerLookalikeQuestion(question: string): HealthPlusHelpAnswer {
+  const normalized = question.trim().toLowerCase();
+
+  if (normalized.includes("different") || normalized.includes("address") || normalized.includes("1") || normalized.includes("letter")) {
+    return { answer: "The address shown is rob1ox.com. It uses the number 1 where the familiar address roblox.com uses the letter l. Similar-looking characters can be easy to miss." };
+  }
+  if (normalized.includes("password") || normalized.includes("personal") || normalized.includes("payment") || normalized.includes("enter")) {
+    return { answer: "Do not enter a password, payment information, or personal information on this controlled lookalike page. Similar-looking addresses are a warning sign, so leave the page or ask a trusted helper if you are unsure." };
+  }
+  if (normalized.includes("real") || normalized.includes("familiar") || normalized.includes("get to") || normalized.includes("correct")) {
+    return { answer: "Choose “Did you mean roblox.com?” in the EasyWeb warning. It opens a controlled safe-destination page inside EasyWeb; it does not open an external website." };
+  }
+  if (normalized.includes("warning") || normalized.includes("why") || normalized.includes("safe")) {
+    return { answer: "EasyWeb is warning you because rob1ox.com closely resembles the familiar address roblox.com. This does not prove the page is malicious, but deceptive sites sometimes replace letters with similar-looking numbers." };
+  }
+
+  return { answer: "I can explain why the address looks suspicious, what character is different, why you should not enter a password, or how to choose the familiar address." };
+}
+
+function genericAnswer(): HealthPlusHelpAnswer {
+  return {
+    answer: "I can help explain what is shown on this page, but detailed answers are currently available only for selected EasyWeb demo pages.",
+  };
+}
+
+function getAssistantProfile(currentPage: BrowserPage): AssistantProfile {
+  if (currentPage.kind === "home") {
+    return {
+      answer: answerHomeQuestion,
+      heading: "Ask EasyWeb",
+      intro: "I can help you find a website, understand something online, or decide where to go.",
+      placeholder: "For example: How do I search the web?",
+      suggestions: homeSuggestions,
+    };
+  }
+
+  if (currentPage.kind === "site" && currentPage.siteId === "healthplus") {
+    return {
+      answer: answerHealthPlusQuestion,
+      heading: "Ask about this HealthPlus page",
+      intro: "Ask about HealthPlus Clinic appointments, hours, insurance, services, or contact details.",
+      placeholder: "For example: What are the office hours?",
+      suggestions: healthPlusSuggestedQuestions,
+    };
+  }
+
+  if (currentPage.kind === "site" && currentPage.siteId === "vitaglow") {
+    return {
+      answer: answerVitaGlowQuestion,
+      heading: "Ask about this VitaGlow page",
+      intro: "I can explain the warning signs EasyWeb found on this controlled demo store.",
+      placeholder: "For example: Why is EasyWeb warning me?",
+      suggestions: vitaGlowSuggestions,
+    };
+  }
+
+  if (currentPage.kind === "site" && currentPage.siteId === "robloxLookalike") {
+    return {
+      answer: answerLookalikeQuestion,
+      heading: "Ask about this address warning",
+      intro: "I can explain what EasyWeb noticed about rob1ox.com and how to leave safely.",
+      placeholder: "For example: What is different about this address?",
+      suggestions: lookalikeSuggestions,
+    };
+  }
+
+  return {
+    answer: genericAnswer,
+    heading: "Help with this page",
+    intro: "I can help explain what is shown on this page.",
+    placeholder: "What would you like help understanding?",
+    suggestions: genericSuggestions,
+  };
+}
+
+export function HelpAssistant({ currentPage }: { currentPage: BrowserPage }) {
+  const profile = getAssistantProfile(currentPage);
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState<HealthPlusHelpAnswer | null>(null);
@@ -28,7 +177,7 @@ export function HelpAssistant() {
     const trimmedQuestion = questionToAnswer.trim();
     if (!trimmedQuestion) return;
     setQuestion(trimmedQuestion);
-    setResponse(answerHealthPlusQuestion(trimmedQuestion));
+    setResponse(profile.answer(trimmedQuestion));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -57,7 +206,7 @@ export function HelpAssistant() {
     <>
       <button aria-haspopup="dialog" className="help-launcher" onClick={() => setIsOpen(true)} type="button">
         <span className="help-icon" aria-hidden="true">?</span>
-        Need Help?
+        Ask EasyWeb
       </button>
 
       {isOpen && (
@@ -65,8 +214,8 @@ export function HelpAssistant() {
           <section aria-labelledby="help-title" aria-modal="true" className="help-dialog" role="dialog">
             <div className="dialog-header">
               <div>
-                <h2 className="dialog-title" id="help-title">Help with this page</h2>
-                <p className="dialog-intro">Ask about appointments, hours, insurance, services, or contact details.</p>
+                <h2 className="dialog-title" id="help-title">{profile.heading}</h2>
+                <p className="dialog-intro">{profile.intro}</p>
               </div>
               <button aria-label="Close help" className="dialog-close" onClick={() => setIsOpen(false)} ref={closeButtonRef} type="button">×</button>
             </div>
@@ -89,14 +238,14 @@ export function HelpAssistant() {
                 <form className="help-form" onSubmit={handleSubmit}>
                   <label htmlFor="page-help-question">What would you like to know?</label>
                   <div>
-                    <input autoComplete="off" id="page-help-question" onChange={(event) => setQuestion(event.target.value)} placeholder="For example: What are the hours?" ref={inputRef} type="text" value={question} />
+                    <input autoComplete="off" id="page-help-question" onChange={(event) => setQuestion(event.target.value)} placeholder={profile.placeholder} ref={inputRef} type="text" value={question} />
                     <button disabled={!question.trim()} type="submit">Ask</button>
                   </div>
                 </form>
                 <div className="help-suggestions" aria-label="Suggested questions">
                   <p>Or choose a question:</p>
                   <div className="help-options">
-                    {healthPlusSuggestedQuestions.map((suggestion) => (
+                    {profile.suggestions.map((suggestion) => (
                       <button className="help-option" key={suggestion} onClick={() => answer(suggestion)} type="button">{suggestion}</button>
                     ))}
                   </div>
