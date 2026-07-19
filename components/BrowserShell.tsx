@@ -15,6 +15,7 @@ import { demoSites, findDemoSite, type DemoSiteId } from "@/lib/demoSites";
 export type BrowserPage =
   | { kind: "home" }
   | { kind: "demo" }
+  | { kind: "external"; url: string }
   | { kind: "site"; siteId: DemoSiteId }
   | { kind: "search"; query: string };
 
@@ -28,6 +29,7 @@ export function BrowserShell() {
 
   const address = useMemo(() => {
     if (currentPage.kind === "site") return demoSites[currentPage.siteId].address;
+    if (currentPage.kind === "external") return currentPage.url;
     if (currentPage.kind === "search") return currentPage.query;
     return "";
   }, [currentPage]);
@@ -43,7 +45,16 @@ export function BrowserShell() {
 
   function submitAddress(value: string) {
     const siteId = findDemoSite(value);
-    navigate(siteId ? { kind: "site", siteId } : { kind: "search", query: value.trim() });
+    if (siteId) {
+      navigate({ kind: "site", siteId });
+      return;
+    }
+
+    const trimmed = value.trim();
+    const externalUrl = normalizeExternalUrl(trimmed);
+    navigate(externalUrl
+      ? { kind: "external", url: externalUrl }
+      : { kind: "search", query: trimmed });
   }
 
   return (
@@ -76,6 +87,13 @@ export function BrowserShell() {
             onLeaveSite={() => navigate(homePage)}
             onNavigate={navigateToSite}
             siteId={currentPage.siteId}
+          />
+        )}
+        {currentPage.kind === "external" && (
+          <ExternalWebsite
+            key={currentPage.url}
+            onReturnHome={() => navigate(homePage)}
+            url={currentPage.url}
           />
         )}
         {currentPage.kind === "search" && (
@@ -120,6 +138,98 @@ function BrowserHome({
         <BookmarkGrid onNavigate={onNavigate} onOpenDemos={onOpenDemos} />
       </section>
     </div>
+  );
+}
+
+function normalizeExternalUrl(value: string) {
+  if (!value) return null;
+
+  const protocolMatch = value.match(/^([a-z][a-z\d+.-]*):/i);
+  if (protocolMatch && protocolMatch[1].toLowerCase() !== "http" && protocolMatch[1].toLowerCase() !== "https") {
+    return null;
+  }
+
+  const candidate = protocolMatch ? value : `https://${value}`;
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (url.username || url.password || !resemblesDomain(url.hostname)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function resemblesDomain(hostname: string) {
+  const labels = hostname.split(".");
+  return labels.length >= 2 && labels.every((label) => (
+    Boolean(label) &&
+    label.length <= 63 &&
+    /^[a-z\d](?:[a-z\d-]*[a-z\d])?$/i.test(label)
+  ));
+}
+
+function ExternalWebsite({
+  onReturnHome,
+  url,
+}: {
+  onReturnHome: () => void;
+  url: string;
+}) {
+  const [displayState, setDisplayState] = useState<"loading" | "loaded" | "fallback">("loading");
+  const [copyStatus, setCopyStatus] = useState("");
+
+  async function copyAddress() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyStatus("Address copied.");
+    } catch {
+      setCopyStatus("Copying was unavailable. You can select the address above instead.");
+    }
+  }
+
+  if (displayState === "fallback") {
+    return (
+      <section className="external-fallback" aria-labelledby="external-fallback-title">
+        <span className="external-site-label">External website</span>
+        <h1 id="external-fallback-title">This website cannot be displayed inside EasyWeb</h1>
+        <p>Some websites only allow themselves to open directly in a browser tab.</p>
+        <code>{url}</code>
+        <div className="external-fallback-actions">
+          <a href={url} rel="noopener noreferrer" target="_blank">Open website in a new tab</a>
+          <button onClick={onReturnHome} type="button">Return home</button>
+          <button onClick={copyAddress} type="button">Copy address</button>
+        </div>
+        {copyStatus && <p className="external-copy-status" role="status">{copyStatus}</p>}
+      </section>
+    );
+  }
+
+  return (
+    <section className="external-website" aria-label={`External website: ${url}`}>
+      <div className="external-view-notice">
+        <span><strong>External website</strong> EasyWeb has not reviewed this page.</span>
+        <button onClick={() => setDisplayState("fallback")} type="button">
+          Having trouble viewing this page? Open it in a new tab.
+        </button>
+      </div>
+      <div className="external-frame-wrap">
+        {displayState === "loading" && (
+          <div className="external-loading" role="status">
+            <span aria-hidden="true" />
+            Loading website…
+          </div>
+        )}
+        <iframe
+          onError={() => setDisplayState("fallback")}
+          onLoad={() => setDisplayState("loaded")}
+          referrerPolicy="no-referrer"
+          sandbox="allow-forms allow-same-origin allow-scripts"
+          src={url}
+          title={`External website at ${url}`}
+        />
+      </div>
+    </section>
   );
 }
 

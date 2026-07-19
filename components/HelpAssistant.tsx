@@ -37,6 +37,13 @@ const lookalikeSuggestions = [
   "How do I get to the real website?",
 ];
 
+const externalSuggestions = [
+  "How do I return home?",
+  "How do I open this website separately?",
+  "What should I check before entering personal information?",
+  "How do I ask my trusted helper?",
+];
+
 const genericSuggestions = [
   "What can EasyWeb help me with?",
   "Can you explain this page?",
@@ -99,6 +106,25 @@ function answerLookalikeQuestion(question: string): HealthPlusHelpAnswer {
   return { answer: "I can explain why the address looks suspicious, what character is different, why you should not enter a password, or how to choose the familiar address." };
 }
 
+function answerExternalQuestion(question: string): HealthPlusHelpAnswer {
+  const normalized = question.trim().toLowerCase();
+
+  if (normalized.includes("home") || normalized.includes("return") || normalized.includes("leave")) {
+    return { answer: "Choose Home in the EasyWeb toolbar to return to your bookmarks and demo scenarios." };
+  }
+  if (normalized.includes("separate") || normalized.includes("new tab") || normalized.includes("display") || normalized.includes("open")) {
+    return { answer: "Choose ‘Having trouble viewing this page?’ above the website. EasyWeb will show an option to open the address in a new tab. It will not open a new tab until you choose that action." };
+  }
+  if (normalized.includes("personal") || normalized.includes("password") || normalized.includes("payment") || normalized.includes("card") || normalized.includes("safe")) {
+    return { answer: "Check that the address is exactly what you expected. Be cautious with urgent requests, unexpected sign-in prompts, and requests for passwords, payment details, or personal information. A page loading does not mean EasyWeb has confirmed it is safe." };
+  }
+  if (normalized.includes("helper") || normalized.includes("trust") || normalized.includes("help")) {
+    return { answer: "Detailed helper requests are currently available on selected EasyWeb warning demos. For a live website, return home or contact your trusted helper directly if you are unsure." };
+  }
+
+  return { answer: "EasyWeb cannot currently read or summarize this live website. I can explain how to return home, open the site separately, or review common warning signs before sharing personal information." };
+}
+
 function genericAnswer(): HealthPlusHelpAnswer {
   return {
     answer: "I can help explain what is shown on this page, but detailed answers are currently available only for selected EasyWeb demo pages.",
@@ -143,6 +169,16 @@ function getAssistantProfile(currentPage: BrowserPage): AssistantProfile {
       intro: "I can explain what EasyWeb noticed about rob1ox.com and how to leave safely.",
       placeholder: "For example: What is different about this address?",
       suggestions: lookalikeSuggestions,
+    };
+  }
+
+  if (currentPage.kind === "external") {
+    return {
+      answer: answerExternalQuestion,
+      heading: "Help with this external website",
+      intro: "EasyWeb can currently provide detailed answers for selected demo pages. Support for understanding live websites is still in development.",
+      placeholder: "For example: How do I return home?",
+      suggestions: externalSuggestions,
     };
   }
 

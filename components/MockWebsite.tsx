@@ -235,7 +235,7 @@ function UtilitySite() {
 }
 
 function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
-  const { createHelpRequest } = useHelperConnection();
+  const { createHelpRequest, state } = useHelperConnection();
   const [secondsLeft, setSecondsLeft] = useState(9 * 60 + 47);
   const [showCheckoutWarning, setShowCheckoutWarning] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -267,7 +267,7 @@ function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
     });
     setHelpRequestMessage(
       shared
-        ? "Your request was shared with your trusted helper. EasyWeb shared this page’s name, address, and payment warning—not anything you typed."
+        ? `Your request was shared with ${state.helperDisplayName}. EasyWeb shared this page’s name, address, and payment warning—not anything you typed.`
         : "No trusted helper is connected yet. Return to EasyWeb Home to connect someone you trust.",
     );
   }
@@ -414,7 +414,7 @@ function LookalikeSite({
   onLeaveSite: () => void;
   onNavigate: (siteId: DemoSiteId) => void;
 }) {
-  const { createHelpRequest } = useHelperConnection();
+  const { createHelpRequest, state } = useHelperConnection();
   const [helpRequestMessage, setHelpRequestMessage] = useState("");
 
   function askHelper() {
@@ -426,7 +426,7 @@ function LookalikeSite({
     });
     setHelpRequestMessage(
       shared
-        ? "Your request was shared with your trusted helper. EasyWeb shared this page’s name, address, and password warning—not anything you typed."
+        ? `Your request was shared with ${state.helperDisplayName}. EasyWeb shared this page’s name, address, and password warning—not anything you typed.`
         : "No trusted helper is connected yet. Return to EasyWeb Home to connect someone you trust.",
     );
   }

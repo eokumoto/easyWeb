@@ -21,7 +21,7 @@ type HelperConnectionContextValue = {
   state: HelperConnectionState;
   isReady: boolean;
   completeOnboardingWithoutHelper: () => void;
-  connectHelper: (pairingCode: string, seniorName: string) => boolean;
+  connectHelper: (pairingCode: string, helperName: string, seniorName: string) => boolean;
   createHelpRequest: (request: NewHelpRequest) => boolean;
   disconnectHelper: () => void;
   dismissResponse: (responseId: string) => void;
@@ -70,16 +70,19 @@ export function HelperConnectionProvider({ children }: { children: React.ReactNo
   }, []);
 
   const connectHelper = useCallback(
-    (pairingCode: string, seniorName: string) => {
+    (pairingCode: string, helperName: string, seniorName: string) => {
+      const trimmedHelperName = helperName.trim();
       const trimmedSeniorName = seniorName.trim();
-      if (pairingCode !== state.pairingCode || !trimmedSeniorName) return false;
+      if (pairingCode !== state.pairingCode || !trimmedHelperName || !trimmedSeniorName) {
+        return false;
+      }
       updateState({
         ...state,
         connectionStatus: "connected",
         onboardingComplete: true,
         skippedPairing: false,
         seniorDisplayName: trimmedSeniorName,
-        helperDisplayName: state.helperDisplayName.trim() || "Trusted helper",
+        helperDisplayName: trimmedHelperName,
       });
       return true;
     },

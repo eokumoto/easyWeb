@@ -176,6 +176,162 @@ a {
   min-height: calc(100vh - 88px);
 }
 
+.external-website {
+  display: flex;
+  min-height: calc(100vh - 88px);
+  flex-direction: column;
+  background: #eef3ef;
+}
+
+.external-view-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 24px;
+  border-bottom: 1px solid #c8d3cb;
+  background: #f7faf8;
+  color: var(--muted-ink);
+  font-size: 14px;
+}
+
+.external-view-notice strong {
+  margin-right: 7px;
+  color: var(--ink);
+}
+
+.external-view-notice button {
+  border: 0;
+  background: transparent;
+  color: var(--green-dark);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.external-frame-wrap {
+  position: relative;
+  display: flex;
+  min-height: 620px;
+  flex: 1;
+}
+
+.external-frame-wrap iframe {
+  width: 100%;
+  min-height: 620px;
+  border: 0;
+  background: white;
+}
+
+.external-loading {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  background: #f7faf8;
+  color: var(--green-dark);
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.external-loading span {
+  width: 38px;
+  height: 38px;
+  border: 4px solid #c9ddd1;
+  border-top-color: var(--green);
+  border-radius: 999px;
+  animation: external-loading-spin 0.9s linear infinite;
+}
+
+@keyframes external-loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+.external-fallback {
+  display: grid;
+  width: min(720px, calc(100% - 36px));
+  min-height: calc(100vh - 150px);
+  margin: 0 auto;
+  place-content: center;
+  justify-items: start;
+}
+
+.external-site-label {
+  margin-bottom: 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e5eee8;
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.external-fallback h1 {
+  max-width: 680px;
+  margin: 0;
+  font-size: clamp(31px, 5vw, 48px);
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+.external-fallback > p {
+  margin: 18px 0;
+  color: var(--muted-ink);
+  font-size: 19px;
+  line-height: 1.5;
+}
+
+.external-fallback code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--green-dark);
+  font-family: inherit;
+  font-weight: 750;
+}
+
+.external-fallback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 11px;
+  margin-top: 25px;
+}
+
+.external-fallback-actions a,
+.external-fallback-actions button {
+  display: inline-flex;
+  min-height: 49px;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 17px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.external-fallback-actions a {
+  border-color: var(--green);
+  background: var(--green);
+  color: white;
+}
+
+.external-copy-status {
+  color: var(--green-dark) !important;
+  font-size: 16px !important;
+  font-weight: 750;
+}
+
 .senior-home {
   min-height: calc(100vh - 88px);
   padding-bottom: 132px;
@@ -2702,6 +2858,23 @@ h1 {
   text-align: center;
 }
 
+.pairing-code-inputs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 11px;
+}
+
+.pairing-form .pairing-code-inputs input {
+  width: 100%;
+  min-width: 0;
+  min-height: 68px;
+  padding: 8px;
+  font-size: 29px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+  text-align: center;
+}
+
 .pairing-form > span {
   color: var(--muted-ink);
   font-size: 14px;
@@ -3194,6 +3367,11 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .external-view-notice {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .clinic-service-grid,
   .resource-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3300,6 +3478,16 @@ h1 {
   .connection-status {
     gap: 7px;
     font-size: 13px;
+  }
+
+  .external-view-notice {
+    padding: 12px 16px;
+  }
+
+  .external-fallback-actions,
+  .external-fallback-actions a,
+  .external-fallback-actions button {
+    width: 100%;
   }
 
   .home-content {
@@ -3628,5 +3816,9 @@ h1 {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .external-loading span {
+    animation: none;
   }
 }

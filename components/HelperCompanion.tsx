@@ -14,12 +14,19 @@ export function HelperCompanion() {
   const { connectHelper, disconnectHelper, state } = useHelperConnection();
   const [pairingCode, setPairingCode] = useState("");
   const [pairingAccepted, setPairingAccepted] = useState(false);
+  const [helperName, setHelperName] = useState("");
   const [seniorName, setSeniorName] = useState("");
   const [error, setError] = useState("");
 
   function handleCodeSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const trimmedHelperName = helperName.trim();
+    if (!trimmedHelperName) {
+      setError("Enter your name before connecting.");
+      return;
+    }
     if (pairingCode === state.pairingCode) {
+      setHelperName(trimmedHelperName);
       setPairingAccepted(true);
       setError("");
       return;
@@ -32,7 +39,8 @@ export function HelperCompanion() {
     const activeCode = state.connectionStatus === "connected"
       ? state.pairingCode
       : pairingCode;
-    if (connectHelper(activeCode, seniorName)) {
+    const activeHelperName = helperName || state.helperDisplayName;
+    if (connectHelper(activeCode, activeHelperName, seniorName)) {
       setError("");
       return;
     }
@@ -48,6 +56,7 @@ export function HelperCompanion() {
     disconnectHelper();
     setPairingCode("");
     setPairingAccepted(false);
+    setHelperName("");
     setSeniorName("");
     setError("");
   }
@@ -70,7 +79,8 @@ export function HelperCompanion() {
           <p className="landing-eyebrow">EasyWeb Companion</p>
           <h1 id="senior-name-title">Who are you helping?</h1>
           <p className="companion-intro">
-            Enter their name so EasyWeb Companion can keep help requests clear and personal.
+            Enter your personal label for this person. This name is used only in
+            your helper dashboard and is never shown to the senior.
           </p>
           <form className="pairing-form" onSubmit={handleNameSubmit}>
             <label htmlFor="senior-name">Name</label>
@@ -85,6 +95,7 @@ export function HelperCompanion() {
               type="text"
               value={seniorName}
             />
+            <span>Examples: Grandma, Mom, or Jeff.</span>
             {error && <p className="pairing-error" role="alert">{error}</p>}
             <button disabled={!seniorName.trim()} type="submit">Complete connection</button>
           </form>
@@ -96,28 +107,60 @@ export function HelperCompanion() {
           <p className="landing-eyebrow">EasyWeb Companion</p>
           <h1 id="companion-title">Connect to someone you trust.</h1>
           <p className="companion-intro">
-            Enter the four-digit code shown in the senior’s EasyWeb browser. No
-            account, email, or password is needed for this prototype.
+            Enter the four-digit code shown in the senior’s EasyWeb browser and
+            your name. No account, email, or password is needed for this prototype.
           </p>
           <form className="pairing-form" onSubmit={handleCodeSubmit}>
-            <label htmlFor="pairing-code">Four-digit pairing code</label>
+            <label id="pairing-code-label">Pairing code</label>
+            <div
+              className="pairing-code-inputs"
+              aria-describedby="pairing-guidance"
+              aria-labelledby="pairing-code-label"
+            >
+              {[0, 1, 2, 3].map((index) => (
+                <input
+                  aria-label={`Pairing code digit ${index + 1}`}
+                  autoComplete={index === 0 ? "one-time-code" : "off"}
+                  inputMode="numeric"
+                  key={index}
+                  maxLength={1}
+                  onChange={(event) => {
+                    const digit = event.target.value.replace(/\D/g, "").slice(-1);
+                    const nextCode = pairingCode.padEnd(4, " ").split("");
+                    nextCode[index] = digit || " ";
+                    setPairingCode(nextCode.join("").trimEnd());
+                    setError("");
+                    const nextInput = event.currentTarget.nextElementSibling;
+                    if (digit && nextInput instanceof HTMLInputElement) {
+                      nextInput.focus();
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Backspace" && !event.currentTarget.value) {
+                      const previous = event.currentTarget.previousElementSibling;
+                      if (previous instanceof HTMLInputElement) previous.focus();
+                    }
+                  }}
+                  type="text"
+                  value={pairingCode[index] === " " ? "" : pairingCode[index] ?? ""}
+                />
+              ))}
+            </div>
+            <span id="pairing-guidance">The code comes from EasyWeb Home in the senior’s browser.</span>
+            <label htmlFor="helper-name">Your name</label>
             <input
-              aria-describedby={error ? "pairing-error" : "pairing-guidance"}
-              autoComplete="one-time-code"
-              id="pairing-code"
-              inputMode="numeric"
-              maxLength={4}
+              autoComplete="name"
+              id="helper-name"
               onChange={(event) => {
-                setPairingCode(event.target.value.replace(/\D/g, "").slice(0, 4));
+                setHelperName(event.target.value);
                 setError("");
               }}
-              placeholder="0000"
+              placeholder="Enter your name"
               type="text"
-              value={pairingCode}
+              value={helperName}
             />
-            <span id="pairing-guidance">The code comes from EasyWeb Home in the senior’s browser.</span>
             {error && <p className="pairing-error" id="pairing-error" role="alert">{error}</p>}
-            <button disabled={pairingCode.length !== 4} type="submit">Continue</button>
+            <button disabled={!/^\d{4}$/.test(pairingCode) || !helperName.trim()} type="submit">Connect</button>
           </form>
           <Link className="companion-text-link" href="/">Return to EasyWeb</Link>
         </section>
