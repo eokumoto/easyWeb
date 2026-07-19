@@ -17,8 +17,8 @@ type AssistantProfile = {
 };
 
 const homeSuggestions = [
-  "Help me find my doctor’s website",
-  "Where can I pay my electric bill?",
+  "Where will my bookmarks appear?",
+  "How do I try the demo scenarios?",
   "How do I search the web?",
   "How can I tell if a website looks suspicious?",
 ];
@@ -45,11 +45,11 @@ const genericSuggestions = [
 function answerHomeQuestion(question: string): HealthPlusHelpAnswer {
   const normalized = question.trim().toLowerCase();
 
-  if (normalized.includes("doctor") || normalized.includes("clinic")) {
-    return { answer: "Choose the My Doctor bookmark on EasyWeb Home to open the controlled HealthPlus Clinic website." };
+  if (normalized.includes("bookmark")) {
+    return { answer: "Your personal bookmarks appear on EasyWeb Home. This prototype starts with an empty list so demo websites are kept separate." };
   }
-  if (normalized.includes("electric") || normalized.includes("bill") || normalized.includes("utility")) {
-    return { answer: "Choose the Electric Bill bookmark on EasyWeb Home to open the controlled utility billing demo." };
+  if (normalized.includes("demo") || normalized.includes("doctor") || normalized.includes("clinic") || normalized.includes("bill")) {
+    return { answer: "Choose Try demo scenarios on EasyWeb Home to open the controlled HealthPlus, Pharmacy, Utility, VitaGlow, and lookalike-address demonstrations." };
   }
   if (normalized.includes("search") || normalized.includes("find") || normalized.includes("website")) {
     return { answer: "Use the large address box at the top. Type a website address or a few words about what you want to find, then choose Go." };
@@ -58,7 +58,7 @@ function answerHomeQuestion(question: string): HealthPlusHelpAnswer {
     return { answer: "Slow down if a site pressures you, makes dramatic promises, hides contact or refund details, or asks for payment information. Review any EasyWeb warnings and ask a trusted helper if you are unsure." };
   }
 
-  return { answer: "I can help you use the bookmarks on EasyWeb Home, search for a website, or understand common website warning signs." };
+  return { answer: "I can help you understand personal bookmarks, open the controlled demo scenarios, search for a website, or recognize common warning signs." };
 }
 
 function answerVitaGlowQuestion(question: string): HealthPlusHelpAnswer {

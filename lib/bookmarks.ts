@@ -15,43 +15,10 @@ export interface BookmarkStorage {
   subscribe(onChange: (bookmarks: Bookmark[]) => void): () => void;
 }
 
-export const defaultBookmarks: Bookmark[] = [
-  {
-    id: "my-doctor",
-    label: "My Doctor",
-    url: "patient.healthplus.demo",
-    destination: "healthplus",
-    icon: "🩺",
-    color: "#e5f6f0",
-  },
-  {
-    id: "pharmacy",
-    label: "Pharmacy",
-    url: "pharmacy.easyweb.demo",
-    destination: "pharmacy",
-    icon: "💊",
-    color: "#e8f1ff",
-  },
-  {
-    id: "electric-bill",
-    label: "Electric Bill",
-    url: "billing.utility.demo",
-    destination: "utility",
-    icon: "⚡",
-    color: "#fff4d9",
-  },
-  {
-    id: "vitaglow-shop",
-    label: "VitaGlow Shop",
-    url: "shop.vitaglow.demo",
-    destination: "vitaglow",
-    icon: "VG",
-    color: "#f7e8f1",
-  },
-];
+export const defaultBookmarks: Bookmark[] = [];
 
-// Version 3 adds the controlled Phase 2 shopping scenario to the homepage.
-const STORAGE_KEY = "easyweb.bookmarks.v3";
+// Version 4 separates personal bookmarks from the controlled demo scenarios.
+const STORAGE_KEY = "easyweb.bookmarks.v4";
 const demoSiteIds: DemoSiteId[] = ["healthplus", "pharmacy", "utility", "vitaglow"];
 
 function isBookmark(value: unknown): value is Bookmark {

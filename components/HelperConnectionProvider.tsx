@@ -19,6 +19,8 @@ import {
 
 type HelperConnectionContextValue = {
   state: HelperConnectionState;
+  isReady: boolean;
+  completeOnboardingWithoutHelper: () => void;
   connectHelper: (pairingCode: string, helperName: string) => boolean;
   createHelpRequest: (request: NewHelpRequest) => boolean;
   dismissResponse: (responseId: string) => void;
@@ -47,9 +49,13 @@ function makePairingCode() {
 
 export function HelperConnectionProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<HelperConnectionState>(initialHelperConnectionState);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const initialize = window.setTimeout(() => setState(readHelperConnection()), 0);
+    const initialize = window.setTimeout(() => {
+      setState(readHelperConnection());
+      setIsReady(true);
+    }, 0);
     const unsubscribe = subscribeToHelperConnection(setState);
     return () => {
       window.clearTimeout(initialize);
@@ -68,6 +74,8 @@ export function HelperConnectionProvider({ children }: { children: React.ReactNo
       updateState({
         ...state,
         connectionStatus: "connected",
+        onboardingComplete: true,
+        skippedPairing: false,
         helperDisplayName: helperName.trim() || "Emily",
       });
       return true;
@@ -80,6 +88,14 @@ export function HelperConnectionProvider({ children }: { children: React.ReactNo
       ...state,
       pairingCode: makePairingCode(),
       connectionStatus: "waiting",
+    });
+  }, [state, updateState]);
+
+  const completeOnboardingWithoutHelper = useCallback(() => {
+    updateState({
+      ...state,
+      onboardingComplete: true,
+      skippedPairing: true,
     });
   }, [state, updateState]);
 
@@ -154,6 +170,8 @@ export function HelperConnectionProvider({ children }: { children: React.ReactNo
   const value = useMemo(
     () => ({
       state,
+      isReady,
+      completeOnboardingWithoutHelper,
       connectHelper,
       createHelpRequest,
       dismissResponse,
@@ -163,6 +181,8 @@ export function HelperConnectionProvider({ children }: { children: React.ReactNo
     }),
     [
       state,
+      isReady,
+      completeOnboardingWithoutHelper,
       connectHelper,
       createHelpRequest,
       dismissResponse,

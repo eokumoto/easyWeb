@@ -22,6 +22,8 @@ export type HelperResponse = {
 export type HelperConnectionState = {
   pairingCode: string;
   connectionStatus: "waiting" | "connected";
+  onboardingComplete: boolean;
+  skippedPairing: boolean;
   seniorDisplayName: string;
   helperDisplayName: string;
   helpRequests: HelpRequest[];
@@ -43,21 +45,26 @@ export const helperResponsePresets = [
 export const initialHelperConnectionState: HelperConnectionState = {
   pairingCode: "0137",
   connectionStatus: "waiting",
+  onboardingComplete: false,
+  skippedPairing: false,
   seniorDisplayName: "Grandma",
   helperDisplayName: "Emily",
   helpRequests: [],
   helperResponses: [],
 };
 
-const STORAGE_KEY = "easyweb.helper-connection.v1";
+const STORAGE_KEY = "easyweb.helper-connection.v2";
+const LEGACY_STORAGE_KEY = "easyweb.helper-connection.v1";
 
 export function readHelperConnection(): HelperConnectionState {
   if (typeof window === "undefined") return initialHelperConnectionState;
 
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) return initialHelperConnectionState;
-    const parsed = JSON.parse(stored) as Partial<HelperConnectionState>;
+    const legacyStored = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    const valueToParse = stored ?? legacyStored;
+    if (!valueToParse) return initialHelperConnectionState;
+    const parsed = JSON.parse(valueToParse) as Partial<HelperConnectionState>;
 
     if (
       typeof parsed.pairingCode !== "string" ||
@@ -71,7 +78,13 @@ export function readHelperConnection(): HelperConnectionState {
       return initialHelperConnectionState;
     }
 
-    return parsed as HelperConnectionState;
+    return {
+      ...(parsed as HelperConnectionState),
+      onboardingComplete: stored
+        ? parsed.onboardingComplete === true
+        : parsed.connectionStatus === "connected",
+      skippedPairing: stored ? parsed.skippedPairing === true : false,
+    };
   } catch {
     return initialHelperConnectionState;
   }

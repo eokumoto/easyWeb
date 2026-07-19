@@ -5,30 +5,16 @@ import { useHelperConnection } from "@/components/HelperConnectionProvider";
 
 export function SeniorConnectionPanel() {
   const { regeneratePairingCode, state } = useHelperConnection();
-  const [isHidden, setIsHidden] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (state.connectionStatus === "connected") {
-    return (
-      <aside className="senior-connection-panel connected-helper-panel" aria-label="Trusted helper connection">
-        <div className="senior-connection-heading">
-          <span aria-hidden="true">✓</span>
-          <div>
-            <p>Trusted helper connected</p>
-            <h2>{state.helperDisplayName} is connected</h2>
-          </div>
-        </div>
-        <p>
-          EasyWeb only shares pages when you choose “Ask my helper.” Your normal
-          browsing is not shared.
-        </p>
-      </aside>
-    );
+    return null;
   }
 
-  if (isHidden) {
+  if (!isExpanded) {
     return (
-      <button className="senior-connect-reopen" onClick={() => setIsHidden(false)} type="button">
-        Connect someone you trust
+      <button className="senior-connect-reopen" onClick={() => setIsExpanded(true)} type="button">
+        Connect a trusted helper
       </button>
     );
   }
@@ -49,7 +35,7 @@ export function SeniorConnectionPanel() {
         {state.pairingCode}
       </div>
       <div className="senior-connection-actions">
-        <button onClick={() => setIsHidden(true)} type="button">Continue without a helper</button>
+        <button onClick={() => setIsExpanded(false)} type="button">Not now</button>
         <button onClick={regeneratePairingCode} type="button">Regenerate code</button>
       </div>
     </aside>

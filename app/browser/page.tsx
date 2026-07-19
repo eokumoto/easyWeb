@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BrowserShell } from "@/components/BrowserShell";
+import { SeniorBrowserExperience } from "@/components/SeniorBrowserExperience";
 
 export const metadata: Metadata = {
   title: "EasyWeb Browser",
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function BrowserPage() {
   return (
     <>
-      <BrowserShell />
+      <SeniorBrowserExperience />
       <Link className="browser-public-link" href="/" aria-label="Return to the EasyWeb landing page">
         EasyWeb site
       </Link>
