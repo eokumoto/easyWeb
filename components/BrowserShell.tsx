@@ -5,6 +5,10 @@ import { BookmarkGrid } from "@/components/BookmarkGrid";
 import { BrowserToolbar } from "@/components/BrowserToolbar";
 import { HelpAssistant } from "@/components/HelpAssistant";
 import { MockWebsite, SearchResults } from "@/components/MockWebsite";
+import {
+  HelperMessageNotice,
+  SeniorConnectionPanel,
+} from "@/components/SeniorHelperConnection";
 import { demoSites, findDemoSite, type DemoSiteId } from "@/lib/demoSites";
 
 export type BrowserPage =
@@ -75,6 +79,7 @@ export function BrowserShell() {
         currentPage={currentPage}
         key={`${currentPage.kind}-${address}`}
       />
+      <HelperMessageNotice onLeaveWebsite={() => navigate(homePage)} />
     </main>
   );
 }
@@ -94,6 +99,7 @@ function BrowserHome({ onNavigate }: { onNavigate: (siteId: DemoSiteId) => void 
       </header>
 
       <section className="home-content" id="main-content">
+        <SeniorConnectionPanel />
         <BookmarkGrid onNavigate={onNavigate} />
       </section>
     </div>

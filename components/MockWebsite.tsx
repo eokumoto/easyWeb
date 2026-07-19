@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useHelperConnection } from "@/components/HelperConnectionProvider";
 import { demoSites, type DemoSiteId } from "@/lib/demoSites";
 import { healthPlusData } from "@/lib/healthPlusData";
 
@@ -234,10 +235,11 @@ function UtilitySite() {
 }
 
 function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
+  const { createHelpRequest } = useHelperConnection();
   const [secondsLeft, setSecondsLeft] = useState(9 * 60 + 47);
   const [showCheckoutWarning, setShowCheckoutWarning] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [helpRequested, setHelpRequested] = useState(false);
+  const [helpRequestMessage, setHelpRequestMessage] = useState("");
   const checkoutRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -254,6 +256,20 @@ function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
     setShowCheckout(true);
     setShowCheckoutWarning(false);
     window.setTimeout(() => checkoutRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
+  }
+
+  function askHelper() {
+    const shared = createHelpRequest({
+      websiteName: demoSites.vitaglow.name,
+      address: demoSites.vitaglow.address,
+      reason: "EasyWeb found exaggerated health claims, time pressure, unclear company details, and a request for payment information.",
+      riskCategory: "payment",
+    });
+    setHelpRequestMessage(
+      shared
+        ? "Your request was shared with your trusted helper. EasyWeb shared this page’s name, address, and payment warning—not anything you typed."
+        : "No trusted helper is connected yet. Return to EasyWeb Home to connect someone you trust.",
+    );
   }
 
   return (
@@ -377,11 +393,11 @@ function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
             <div className="checkout-warning-actions">
               <button className="warning-leave" onClick={onLeaveSite} type="button">Leave this website</button>
               <button className="warning-continue" onClick={continueToCheckout} type="button">Continue anyway</button>
-              <button className="warning-helper" onClick={() => setHelpRequested(true)} type="button">Ask my helper</button>
+              <button className="warning-helper" onClick={askHelper} type="button">Ask my helper</button>
             </div>
-            {helpRequested && (
+            {helpRequestMessage && (
               <p className="helper-request-confirmation" role="status">
-                Help request created. Your helper can review it later.
+                {helpRequestMessage}
               </p>
             )}
           </section>
@@ -398,7 +414,22 @@ function LookalikeSite({
   onLeaveSite: () => void;
   onNavigate: (siteId: DemoSiteId) => void;
 }) {
-  const [helpRequested, setHelpRequested] = useState(false);
+  const { createHelpRequest } = useHelperConnection();
+  const [helpRequestMessage, setHelpRequestMessage] = useState("");
+
+  function askHelper() {
+    const shared = createHelpRequest({
+      websiteName: demoSites.robloxLookalike.name,
+      address: demoSites.robloxLookalike.address,
+      reason: "EasyWeb found an address using the number 1 instead of the letter l on a page asking for a password.",
+      riskCategory: "password",
+    });
+    setHelpRequestMessage(
+      shared
+        ? "Your request was shared with your trusted helper. EasyWeb shared this page’s name, address, and password warning—not anything you typed."
+        : "No trusted helper is connected yet. Return to EasyWeb Home to connect someone you trust.",
+    );
+  }
 
   return (
     <article className="mock-site lookalike-site">
@@ -439,13 +470,13 @@ function LookalikeSite({
           <button className="lookalike-leave-action" onClick={onLeaveSite} type="button">
             Leave this website
           </button>
-          <button className="lookalike-helper-action" onClick={() => setHelpRequested(true)} type="button">
+          <button className="lookalike-helper-action" onClick={askHelper} type="button">
             Ask my helper
           </button>
         </div>
-        {helpRequested && (
+        {helpRequestMessage && (
           <p className="helper-request-confirmation" role="status">
-            Help request created. Your helper can review this address warning later.
+            {helpRequestMessage}
           </p>
         )}
       </section>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BookmarkProvider } from "@/components/BookmarkProvider";
+import { HelperConnectionProvider } from "@/components/HelperConnectionProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <BookmarkProvider>{children}</BookmarkProvider>
+        <HelperConnectionProvider>
+          <BookmarkProvider>{children}</BookmarkProvider>
+        </HelperConnectionProvider>
       </body>
     </html>
   );
