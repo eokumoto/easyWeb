@@ -21,8 +21,9 @@ type HelperConnectionContextValue = {
   state: HelperConnectionState;
   isReady: boolean;
   completeOnboardingWithoutHelper: () => void;
-  connectHelper: (pairingCode: string, helperName: string) => boolean;
+  connectHelper: (pairingCode: string, seniorName: string) => boolean;
   createHelpRequest: (request: NewHelpRequest) => boolean;
+  disconnectHelper: () => void;
   dismissResponse: (responseId: string) => void;
   markRequestReviewed: (requestId: string) => void;
   regeneratePairingCode: () => void;
@@ -69,14 +70,16 @@ export function HelperConnectionProvider({ children }: { children: React.ReactNo
   }, []);
 
   const connectHelper = useCallback(
-    (pairingCode: string, helperName: string) => {
-      if (pairingCode !== state.pairingCode) return false;
+    (pairingCode: string, seniorName: string) => {
+      const trimmedSeniorName = seniorName.trim();
+      if (pairingCode !== state.pairingCode || !trimmedSeniorName) return false;
       updateState({
         ...state,
         connectionStatus: "connected",
         onboardingComplete: true,
         skippedPairing: false,
-        helperDisplayName: helperName.trim() || "Emily",
+        seniorDisplayName: trimmedSeniorName,
+        helperDisplayName: state.helperDisplayName.trim() || "Trusted helper",
       });
       return true;
     },
@@ -96,6 +99,19 @@ export function HelperConnectionProvider({ children }: { children: React.ReactNo
       ...state,
       onboardingComplete: true,
       skippedPairing: true,
+    });
+  }, [state, updateState]);
+
+  const disconnectHelper = useCallback(() => {
+    updateState({
+      ...state,
+      connectionStatus: "waiting",
+      onboardingComplete: true,
+      skippedPairing: true,
+      seniorDisplayName: "",
+      helperDisplayName: "",
+      helpRequests: [],
+      helperResponses: [],
     });
   }, [state, updateState]);
 
@@ -174,6 +190,7 @@ export function HelperConnectionProvider({ children }: { children: React.ReactNo
       completeOnboardingWithoutHelper,
       connectHelper,
       createHelpRequest,
+      disconnectHelper,
       dismissResponse,
       markRequestReviewed,
       regeneratePairingCode,
@@ -185,6 +202,7 @@ export function HelperConnectionProvider({ children }: { children: React.ReactNo
       completeOnboardingWithoutHelper,
       connectHelper,
       createHelpRequest,
+      disconnectHelper,
       dismissResponse,
       markRequestReviewed,
       regeneratePairingCode,

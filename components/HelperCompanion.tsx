@@ -9,18 +9,45 @@ import {
 } from "@/lib/helperConnection";
 
 export function HelperCompanion() {
-  const { connectHelper, state } = useHelperConnection();
+  const { connectHelper, disconnectHelper, state } = useHelperConnection();
   const [pairingCode, setPairingCode] = useState("");
-  const [helperName, setHelperName] = useState(state.helperDisplayName);
+  const [pairingAccepted, setPairingAccepted] = useState(false);
+  const [seniorName, setSeniorName] = useState("");
   const [error, setError] = useState("");
 
-  function handleConnect(event: FormEvent<HTMLFormElement>) {
+  function handleCodeSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (connectHelper(pairingCode, helperName)) {
+    if (pairingCode === state.pairingCode) {
+      setPairingAccepted(true);
       setError("");
       return;
     }
     setError("That code does not match. Check the four digits in the senior’s EasyWeb browser and try again.");
+  }
+
+  function handleNameSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const activeCode = state.connectionStatus === "connected"
+      ? state.pairingCode
+      : pairingCode;
+    if (connectHelper(activeCode, seniorName)) {
+      setError("");
+      return;
+    }
+    setPairingAccepted(false);
+    setError("The pairing code changed. Enter the current four-digit code and try again.");
+  }
+
+  const hasSeniorName = Boolean(state.seniorDisplayName.trim());
+  const showNameStep = pairingAccepted ||
+    (state.connectionStatus === "connected" && !hasSeniorName);
+
+  function handleDisconnect() {
+    disconnectHelper();
+    setPairingCode("");
+    setPairingAccepted(false);
+    setSeniorName("");
+    setError("");
   }
 
   return (
@@ -33,8 +60,34 @@ export function HelperCompanion() {
         <span className="prototype-badge">Local pairing demo</span>
       </header>
 
-      {state.connectionStatus === "connected" ? (
-        <ConnectedCompanion />
+      {state.connectionStatus === "connected" && hasSeniorName ? (
+        <ConnectedCompanion onDisconnect={handleDisconnect} />
+      ) : showNameStep ? (
+        <section className="companion-card" aria-labelledby="senior-name-title">
+          <div className="companion-icon" aria-hidden="true">+</div>
+          <p className="landing-eyebrow">EasyWeb Companion</p>
+          <h1 id="senior-name-title">Who are you helping?</h1>
+          <p className="companion-intro">
+            Enter their name so EasyWeb Companion can keep help requests clear and personal.
+          </p>
+          <form className="pairing-form" onSubmit={handleNameSubmit}>
+            <label htmlFor="senior-name">Name</label>
+            <input
+              autoComplete="off"
+              id="senior-name"
+              onChange={(event) => {
+                setSeniorName(event.target.value);
+                setError("");
+              }}
+              placeholder="Enter name"
+              type="text"
+              value={seniorName}
+            />
+            {error && <p className="pairing-error" role="alert">{error}</p>}
+            <button disabled={!seniorName.trim()} type="submit">Complete connection</button>
+          </form>
+          <Link className="companion-text-link" href="/">Return to EasyWeb</Link>
+        </section>
       ) : (
         <section className="companion-card" aria-labelledby="companion-title">
           <div className="companion-icon" aria-hidden="true">+</div>
@@ -44,15 +97,7 @@ export function HelperCompanion() {
             Enter the four-digit code shown in the senior’s EasyWeb browser. No
             account, email, or password is needed for this prototype.
           </p>
-          <form className="pairing-form" onSubmit={handleConnect}>
-            <label htmlFor="helper-name">Your display name</label>
-            <input
-              autoComplete="off"
-              id="helper-name"
-              onChange={(event) => setHelperName(event.target.value)}
-              type="text"
-              value={helperName}
-            />
+          <form className="pairing-form" onSubmit={handleCodeSubmit}>
             <label htmlFor="pairing-code">Four-digit pairing code</label>
             <input
               aria-describedby={error ? "pairing-error" : "pairing-guidance"}
@@ -70,7 +115,7 @@ export function HelperCompanion() {
             />
             <span id="pairing-guidance">The code comes from EasyWeb Home in the senior’s browser.</span>
             {error && <p className="pairing-error" id="pairing-error" role="alert">{error}</p>}
-            <button disabled={pairingCode.length !== 4 || !helperName.trim()} type="submit">Connect</button>
+            <button disabled={pairingCode.length !== 4} type="submit">Continue</button>
           </form>
           <Link className="companion-text-link" href="/">Return to EasyWeb</Link>
         </section>
@@ -79,9 +124,11 @@ export function HelperCompanion() {
   );
 }
 
-function ConnectedCompanion() {
+function ConnectedCompanion({ onDisconnect }: { onDisconnect: () => void }) {
   const { state } = useHelperConnection();
+  const seniorName = state.seniorDisplayName.trim();
   const activeRequests = state.helpRequests.filter((request) => request.status === "active");
+  const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
 
   return (
     <div className="companion-dashboard">
@@ -89,9 +136,11 @@ function ConnectedCompanion() {
         <span aria-hidden="true">✓</span>
         <div>
           <p>Connected</p>
-          <h1 id="connected-title">Connected to {state.seniorDisplayName}’s EasyWeb</h1>
+          <h1 id="connected-title">
+            {seniorName ? `Connected to ${seniorName}’s EasyWeb` : "Connected EasyWeb"}
+          </h1>
           <p>
-            You will only see pages that {state.seniorDisplayName} explicitly asks
+            You will only see pages that {seniorName || "this person"} explicitly asks
             you to review. Normal browsing is not shared.
           </p>
         </div>
@@ -109,7 +158,7 @@ function ConnectedCompanion() {
         {activeRequests.length === 0 ? (
           <div className="empty-requests">
             <strong>No active help requests</strong>
-            <p>When {state.seniorDisplayName} asks for help on a warning page, it will appear here.</p>
+            <p>When {seniorName || "this person"} asks for help on a warning page, it will appear here.</p>
           </div>
         ) : (
           <div className="helper-request-list">
@@ -120,7 +169,35 @@ function ConnectedCompanion() {
         )}
       </section>
 
-      <Link className="companion-text-link dashboard-return" href="/">Return to EasyWeb site</Link>
+      <div className="companion-dashboard-footer">
+        <Link className="companion-text-link" href="/">Return to EasyWeb site</Link>
+        <button
+          className="disconnect-helper-action"
+          onClick={() => setConfirmingDisconnect(true)}
+          type="button"
+        >
+          Disconnect from {seniorName}
+        </button>
+      </div>
+
+      {confirmingDisconnect && (
+        <section
+          className="disconnect-confirmation"
+          aria-labelledby="disconnect-title"
+          role="alertdialog"
+        >
+          <h2 id="disconnect-title">Disconnect from {seniorName}’s EasyWeb?</h2>
+          <p>
+            This will end the local pairing and return EasyWeb Companion to the
+            pairing-code screen. Shared help requests and messages will be cleared
+            so they are not shown to the next person you pair with.
+          </p>
+          <div>
+            <button onClick={() => setConfirmingDisconnect(false)} type="button">Cancel</button>
+            <button onClick={onDisconnect} type="button">Disconnect</button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -154,7 +231,9 @@ function HelperRequestCard({ request }: { request: HelpRequest }) {
         <strong>Why EasyWeb raised concern</strong>
         <p>{request.reason}</p>
       </div>
-      <label htmlFor={`helper-message-${request.id}`}>Message to {state.seniorDisplayName}</label>
+      <label htmlFor={`helper-message-${request.id}`}>
+        Message to {state.seniorDisplayName.trim() || "this person"}
+      </label>
       <select
         id={`helper-message-${request.id}`}
         onChange={(event) => {

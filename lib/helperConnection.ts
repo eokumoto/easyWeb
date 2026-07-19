@@ -47,21 +47,26 @@ export const initialHelperConnectionState: HelperConnectionState = {
   connectionStatus: "waiting",
   onboardingComplete: false,
   skippedPairing: false,
-  seniorDisplayName: "Grandma",
-  helperDisplayName: "Emily",
+  seniorDisplayName: "",
+  helperDisplayName: "",
   helpRequests: [],
   helperResponses: [],
 };
 
-const STORAGE_KEY = "easyweb.helper-connection.v2";
-const LEGACY_STORAGE_KEY = "easyweb.helper-connection.v1";
+const STORAGE_KEY = "easyweb.helper-connection.v3";
+const LEGACY_STORAGE_KEYS = [
+  "easyweb.helper-connection.v2",
+  "easyweb.helper-connection.v1",
+];
 
 export function readHelperConnection(): HelperConnectionState {
   if (typeof window === "undefined") return initialHelperConnectionState;
 
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    const legacyStored = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    const legacyStored = LEGACY_STORAGE_KEYS
+      .map((key) => window.localStorage.getItem(key))
+      .find((value) => value !== null);
     const valueToParse = stored ?? legacyStored;
     if (!valueToParse) return initialHelperConnectionState;
     const parsed = JSON.parse(valueToParse) as Partial<HelperConnectionState>;
@@ -80,10 +85,10 @@ export function readHelperConnection(): HelperConnectionState {
 
     return {
       ...(parsed as HelperConnectionState),
-      onboardingComplete: stored
-        ? parsed.onboardingComplete === true
-        : parsed.connectionStatus === "connected",
-      skippedPairing: stored ? parsed.skippedPairing === true : false,
+      seniorDisplayName: stored ? parsed.seniorDisplayName.trim() : "",
+      onboardingComplete:
+        parsed.onboardingComplete === true || parsed.connectionStatus === "connected",
+      skippedPairing: parsed.skippedPairing === true,
     };
   } catch {
     return initialHelperConnectionState;
