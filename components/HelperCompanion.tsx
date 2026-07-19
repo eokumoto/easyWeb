@@ -2,7 +2,9 @@
 
 import { type FormEvent, useState } from "react";
 import Link from "next/link";
+import { useBookmarks } from "@/components/BookmarkProvider";
 import { useHelperConnection } from "@/components/HelperConnectionProvider";
+import { normalizeBookmarkAddress, type Bookmark } from "@/lib/bookmarks";
 import {
   type HelpRequest,
   helperResponsePresets,
@@ -146,6 +148,8 @@ function ConnectedCompanion({ onDisconnect }: { onDisconnect: () => void }) {
         </div>
       </section>
 
+      <HelperBookmarks seniorName={seniorName} />
+
       <section className="helper-requests" aria-labelledby="requests-title">
         <div className="helper-requests-heading">
           <div>
@@ -200,6 +204,158 @@ function ConnectedCompanion({ onDisconnect }: { onDisconnect: () => void }) {
       )}
     </div>
   );
+}
+
+type BookmarkEditor = {
+  id: string | null;
+  name: string;
+  address: string;
+};
+
+function HelperBookmarks({ seniorName }: { seniorName: string }) {
+  const { bookmarks, saveBookmarks } = useBookmarks();
+  const [editor, setEditor] = useState<BookmarkEditor | null>(null);
+  const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
+
+  function openAddForm() {
+    setEditor({ id: null, name: "", address: "" });
+    setError("");
+    setStatus("");
+  }
+
+  function openEditForm(bookmark: Bookmark) {
+    setEditor({ ...bookmark });
+    setError("");
+    setStatus("");
+  }
+
+  function closeForm() {
+    setEditor(null);
+    setError("");
+  }
+
+  function saveBookmark(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editor) return;
+
+    const name = editor.name.trim();
+    const address = normalizeBookmarkAddress(editor.address);
+    if (!name && !editor.address.trim()) {
+      setError("Enter a name and website address.");
+      return;
+    }
+    if (!name) {
+      setError("Enter a name for this bookmark.");
+      return;
+    }
+    if (!editor.address.trim()) {
+      setError("Enter a website address.");
+      return;
+    }
+    if (!address) {
+      setError("Enter a website address such as example.com.");
+      return;
+    }
+
+    if (editor.id) {
+      saveBookmarks(bookmarks.map((bookmark) => (
+        bookmark.id === editor.id ? { id: editor.id, name, address } : bookmark
+      )));
+      setStatus(`${name} was updated for ${seniorName}.`);
+    } else {
+      saveBookmarks([...bookmarks, { id: makeBookmarkId(), name, address }]);
+      setStatus(`${name} was added for ${seniorName}.`);
+    }
+    setEditor(null);
+    setError("");
+  }
+
+  function removeBookmark(bookmark: Bookmark) {
+    saveBookmarks(bookmarks.filter((current) => current.id !== bookmark.id));
+    if (editor?.id === bookmark.id) closeForm();
+    setStatus(`${bookmark.name} was removed from ${seniorName}’s bookmarks.`);
+  }
+
+  return (
+    <section className="helper-bookmarks" aria-labelledby="bookmarks-title">
+      <div className="helper-bookmarks-heading">
+        <div>
+          <p className="landing-eyebrow">Shared with the senior</p>
+          <h2 id="bookmarks-title">Bookmarks for {seniorName}</h2>
+        </div>
+        {!editor && <button onClick={openAddForm} type="button">Add bookmark</button>}
+      </div>
+
+      {editor && (
+        <form className="bookmark-editor" onSubmit={saveBookmark} noValidate>
+          <h3>{editor.id ? "Edit bookmark" : "Add bookmark"}</h3>
+          <label htmlFor="bookmark-name">Name</label>
+          <input
+            autoComplete="off"
+            id="bookmark-name"
+            onChange={(event) => {
+              setEditor({ ...editor, name: event.target.value });
+              setError("");
+            }}
+            placeholder="My Doctor"
+            required
+            type="text"
+            value={editor.name}
+          />
+          <label htmlFor="bookmark-address">Website address</label>
+          <input
+            autoCapitalize="none"
+            autoComplete="url"
+            id="bookmark-address"
+            onChange={(event) => {
+              setEditor({ ...editor, address: event.target.value });
+              setError("");
+            }}
+            placeholder="example.com"
+            required
+            type="text"
+            value={editor.address}
+          />
+          {error && <p className="pairing-error" role="alert">{error}</p>}
+          <div className="bookmark-editor-actions">
+            <button type="submit">Save</button>
+            <button onClick={closeForm} type="button">Cancel</button>
+          </div>
+        </form>
+      )}
+
+      {bookmarks.length === 0 ? (
+        <div className="empty-helper-bookmarks">
+          <strong>No bookmarks yet</strong>
+          <p>Add a useful website and it will appear on {seniorName}’s EasyWeb Home screen.</p>
+        </div>
+      ) : (
+        <div className="helper-bookmark-list">
+          {bookmarks.map((bookmark) => (
+            <article className="helper-bookmark-card" key={bookmark.id}>
+              <div>
+                <strong>{bookmark.name}</strong>
+                <span>{bookmark.address}</span>
+              </div>
+              <div>
+                <button onClick={() => openEditForm(bookmark)} type="button">Edit</button>
+                <button onClick={() => removeBookmark(bookmark)} type="button">Remove</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+      {status && <p className="bookmark-save-status" role="status">{status}</p>}
+    </section>
+  );
+}
+
+function makeBookmarkId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `bookmark-${crypto.randomUUID()}`;
+  }
+  return `bookmark-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function HelperRequestCard({ request }: { request: HelpRequest }) {

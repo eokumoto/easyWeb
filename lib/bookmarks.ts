@@ -1,12 +1,7 @@
-import type { DemoSiteId } from "@/lib/demoSites";
-
 export type Bookmark = {
   id: string;
-  label: string;
-  url: string;
-  destination: DemoSiteId;
-  icon: string;
-  color: string;
+  name: string;
+  address: string;
 };
 
 export interface BookmarkStorage {
@@ -19,7 +14,6 @@ export const defaultBookmarks: Bookmark[] = [];
 
 // Version 4 separates personal bookmarks from the controlled demo scenarios.
 const STORAGE_KEY = "easyweb.bookmarks.v4";
-const demoSiteIds: DemoSiteId[] = ["healthplus", "pharmacy", "utility", "vitaglow"];
 
 function isBookmark(value: unknown): value is Bookmark {
   if (!value || typeof value !== "object") return false;
@@ -27,12 +21,18 @@ function isBookmark(value: unknown): value is Bookmark {
   const bookmark = value as Record<string, unknown>;
   return (
     typeof bookmark.id === "string" &&
+    typeof bookmark.name === "string" &&
+    typeof bookmark.address === "string"
+  );
+}
+
+function isLegacyBookmark(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const bookmark = value as Record<string, unknown>;
+  return (
+    typeof bookmark.id === "string" &&
     typeof bookmark.label === "string" &&
-    typeof bookmark.url === "string" &&
-    typeof bookmark.destination === "string" &&
-    demoSiteIds.includes(bookmark.destination as DemoSiteId) &&
-    typeof bookmark.icon === "string" &&
-    typeof bookmark.color === "string"
+    typeof bookmark.url === "string"
   );
 }
 
@@ -41,7 +41,35 @@ function parseBookmarks(value: string | null): Bookmark[] | null {
 
   try {
     const parsed: unknown = JSON.parse(value);
-    return Array.isArray(parsed) && parsed.every(isBookmark) ? parsed : null;
+    if (!Array.isArray(parsed)) return null;
+    if (parsed.every(isBookmark)) return parsed;
+    if (parsed.every(isLegacyBookmark)) {
+      return parsed.map((bookmark) => ({
+        id: bookmark.id,
+        name: bookmark.label,
+        address: bookmark.url,
+      }));
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function normalizeBookmarkAddress(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const candidate = /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
+
+  try {
+    const address = new URL(candidate);
+    if ((address.protocol !== "http:" && address.protocol !== "https:") || !address.hostname) {
+      return null;
+    }
+    return address.toString();
   } catch {
     return null;
   }

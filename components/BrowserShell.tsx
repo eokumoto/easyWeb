@@ -66,7 +66,7 @@ export function BrowserShell() {
       <div className="browser-viewport" key={refreshKey}>
         {currentPage.kind === "home" && (
           <BrowserHome
-            onNavigate={navigateToSite}
+            onNavigate={submitAddress}
             onOpenDemos={() => navigate({ kind: "demo" })}
           />
         )}
@@ -96,7 +96,7 @@ function BrowserHome({
   onNavigate,
   onOpenDemos,
 }: {
-  onNavigate: (siteId: DemoSiteId) => void;
+  onNavigate: (address: string) => void;
   onOpenDemos: () => void;
 }) {
   const { state } = useHelperConnection();

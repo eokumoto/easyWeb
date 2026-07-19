@@ -2,7 +2,6 @@
 
 import type { CSSProperties } from "react";
 import { useBookmarks } from "@/components/BookmarkProvider";
-import type { DemoSiteId } from "@/lib/demoSites";
 
 type BookmarkStyle = CSSProperties & { "--bookmark-color": string };
 
@@ -10,7 +9,7 @@ export function BookmarkGrid({
   onNavigate,
   onOpenDemos,
 }: {
-  onNavigate: (destination: DemoSiteId) => void;
+  onNavigate: (address: string) => void;
   onOpenDemos: () => void;
 }) {
   const { bookmarks } = useBookmarks();
@@ -33,17 +32,17 @@ export function BookmarkGrid({
           <button
             className="bookmark-card"
             key={bookmark.id}
-            onClick={() => onNavigate(bookmark.destination)}
-            style={{ "--bookmark-color": bookmark.color } as BookmarkStyle}
+            onClick={() => onNavigate(bookmark.address)}
+            style={{ "--bookmark-color": "#e5f6f0" } as BookmarkStyle}
             type="button"
           >
             <span className="bookmark-icon" aria-hidden="true">
-              {bookmark.icon}
+              {bookmark.name.charAt(0).toUpperCase()}
             </span>
             <span className="bookmark-label">
               <span>
-                {bookmark.label}
-                <span className="bookmark-address">{bookmark.url}</span>
+                {bookmark.name}
+                <span className="bookmark-address">{bookmark.address}</span>
               </span>
               <span className="bookmark-arrow" aria-hidden="true">
                 →
