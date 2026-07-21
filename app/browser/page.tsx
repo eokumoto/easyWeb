@@ -4,7 +4,7 @@ import { SeniorBrowserExperience } from "@/components/SeniorBrowserExperience";
 
 export const metadata: Metadata = {
   title: "EasyWeb Browser",
-  description: "The EasyWeb senior browsing experience.",
+  description: "A calmer, clearer browsing experience from EasyWeb.",
 };
 
 export default function BrowserPage() {

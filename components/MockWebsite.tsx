@@ -267,8 +267,8 @@ function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
     });
     setHelpRequestMessage(
       shared
-        ? `Your request was shared with ${state.helperDisplayName}. EasyWeb shared this page’s name, address, and payment warning—not anything you typed.`
-        : "No trusted helper is connected yet. Return to EasyWeb Home to connect someone you trust.",
+        ? `Shared with ${state.helperDisplayName}. Only this page’s name, address, and payment warning were shared.`
+        : "No helper connected. Return Home to connect one.",
     );
   }
 
@@ -285,8 +285,7 @@ function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
           </div>
         </div>
         <p>
-          This does not prove the website is a scam, but it is wise to slow down
-          and review these concerns before buying.
+          This does not prove the website is a scam. Review these concerns before buying.
         </p>
         <ul>
           <li>It promises unusually dramatic health and appearance results.</li>
@@ -387,8 +386,8 @@ function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
             <p className="checkout-warning-eyebrow">Pause before continuing</p>
             <h2 id="checkout-warning-title">This website is asking for payment information</h2>
             <p>
-              EasyWeb found several warning signs. Review the concerns above before
-              deciding whether to continue. This does not prove the website is a scam.
+              EasyWeb found several warning signs. Review them before continuing.
+              This does not prove the website is a scam.
             </p>
             <div className="checkout-warning-actions">
               <button className="warning-leave" onClick={onLeaveSite} type="button">Leave this website</button>
@@ -426,8 +425,8 @@ function LookalikeSite({
     });
     setHelpRequestMessage(
       shared
-        ? `Your request was shared with ${state.helperDisplayName}. EasyWeb shared this page’s name, address, and password warning—not anything you typed.`
-        : "No trusted helper is connected yet. Return to EasyWeb Home to connect someone you trust.",
+        ? `Shared with ${state.helperDisplayName}. Only this page’s name, address, and password warning were shared.`
+        : "No helper connected. Return Home to connect one.",
     );
   }
 

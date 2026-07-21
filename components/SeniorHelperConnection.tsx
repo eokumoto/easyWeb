@@ -28,9 +28,7 @@ export function SeniorConnectionPanel() {
           <h2 id="senior-connection-title">Connect someone you trust</h2>
         </div>
       </div>
-      <p>
-        Share this code with someone you trust. They can enter it in EasyWeb Companion.
-      </p>
+      <p>Share this code with your helper.</p>
       <div className="pairing-code-display" aria-label={`Pairing code ${state.pairingCode.split("").join(" ")}`}>
         {state.pairingCode}
       </div>
@@ -66,8 +64,8 @@ export function HelperMessageNotice({
 
   return (
     <aside className="helper-message-notice" role="alert" aria-labelledby="helper-message-title">
-      <p>Trusted helper message</p>
-      <h2 id="helper-message-title">{state.helperDisplayName} sent you a message about:</h2>
+      <p>Helper message</p>
+      <h2 id="helper-message-title">From {state.helperDisplayName}</h2>
       <section className="helper-message-context" aria-label="Website this message is about">
         <strong>{request.websiteName}</strong>
         <code>{request.address}</code>

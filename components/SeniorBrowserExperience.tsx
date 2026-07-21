@@ -27,7 +27,7 @@ export function SeniorBrowserExperience() {
           <p className="onboarding-eyebrow">Optional trusted support</p>
           <h1 id="onboarding-title">Connect someone you trust</h1>
           <p className="onboarding-intro">
-            Share this code with someone you trust. They can enter it in EasyWeb Companion.
+            Share this code with your helper.
           </p>
           <div
             className="onboarding-code"
@@ -36,11 +36,11 @@ export function SeniorBrowserExperience() {
             {state.pairingCode}
           </div>
           <p className="onboarding-privacy">
-            Pairing is optional. EasyWeb only shares a page when you choose to ask for help.
+            Pages are shared only when you ask.
           </p>
           <div className="onboarding-actions">
             <button onClick={completeOnboardingWithoutHelper} type="button">
-              Continue without a helper
+              Open without a helper
             </button>
             <button onClick={regeneratePairingCode} type="button">
               Regenerate code

@@ -7,10 +7,8 @@ type BookmarkStyle = CSSProperties & { "--bookmark-color": string };
 
 export function BookmarkGrid({
   onNavigate,
-  onOpenDemos,
 }: {
   onNavigate: (address: string) => void;
-  onOpenDemos: () => void;
 }) {
   const { bookmarks } = useBookmarks();
 
@@ -18,15 +16,13 @@ export function BookmarkGrid({
     return (
       <section className="empty-bookmarks" aria-labelledby="empty-bookmarks-title">
         <span className="empty-bookmarks-icon" aria-hidden="true">☆</span>
-        <h2 id="empty-bookmarks-title">Your bookmarks will appear here</h2>
-        <p>Your trusted helper can add useful websites here.</p>
-        <button onClick={onOpenDemos} type="button">Try demo scenarios</button>
+        <h2 id="empty-bookmarks-title">No bookmarks yet</h2>
+        <p>Your helper can add websites here.</p>
       </section>
     );
   }
 
   return (
-    <>
       <div className="bookmark-grid" aria-label="Your bookmarks">
         {bookmarks.map((bookmark) => (
           <button
@@ -51,9 +47,5 @@ export function BookmarkGrid({
           </button>
         ))}
       </div>
-      <button className="demo-access-button" onClick={onOpenDemos} type="button">
-        Try demo scenarios
-      </button>
-    </>
   );
 }

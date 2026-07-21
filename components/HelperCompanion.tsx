@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useBookmarks } from "@/components/BookmarkProvider";
 import { useHelperConnection } from "@/components/HelperConnectionProvider";
 import { normalizeBookmarkAddress, type Bookmark } from "@/lib/bookmarks";
+import { demoSites } from "@/lib/demoSites";
 import {
   type HelpRequest,
   helperResponsePresets,
@@ -31,7 +32,7 @@ export function HelperCompanion() {
       setError("");
       return;
     }
-    setError("That code does not match. Check the four digits in the senior’s EasyWeb browser and try again.");
+    setError("That code does not match. Check the four digits shown in EasyWeb and try again.");
   }
 
   function handleNameSubmit(event: FormEvent<HTMLFormElement>) {
@@ -79,8 +80,7 @@ export function HelperCompanion() {
           <p className="landing-eyebrow">EasyWeb Companion</p>
           <h1 id="senior-name-title">Who are you helping?</h1>
           <p className="companion-intro">
-            Enter your personal label for this person. This name is used only in
-            your helper dashboard and is never shown to the senior.
+            Choose a name you’ll recognize. It only appears in your Helper Companion.
           </p>
           <form className="pairing-form" onSubmit={handleNameSubmit}>
             <label htmlFor="senior-name">Name</label>
@@ -91,11 +91,11 @@ export function HelperCompanion() {
                 setSeniorName(event.target.value);
                 setError("");
               }}
-              placeholder="Enter name"
+              placeholder="Enter a name"
               type="text"
               value={seniorName}
             />
-            <span>Examples: Grandma, Mom, or Jeff.</span>
+            <span>Examples: Grandma, Grandpa, Mom, or Alex.</span>
             {error && <p className="pairing-error" role="alert">{error}</p>}
             <button disabled={!seniorName.trim()} type="submit">Complete connection</button>
           </form>
@@ -105,10 +105,9 @@ export function HelperCompanion() {
         <section className="companion-card" aria-labelledby="companion-title">
           <div className="companion-icon" aria-hidden="true">+</div>
           <p className="landing-eyebrow">EasyWeb Companion</p>
-          <h1 id="companion-title">Connect to someone you trust.</h1>
+          <h1 id="companion-title">Connect to EasyWeb</h1>
           <p className="companion-intro">
-            Enter the four-digit code shown in the senior’s EasyWeb browser and
-            your name. No account, email, or password is needed for this prototype.
+            Enter the pairing code shown in EasyWeb, then enter your name. No account is needed.
           </p>
           <form className="pairing-form" onSubmit={handleCodeSubmit}>
             <label id="pairing-code-label">Pairing code</label>
@@ -146,7 +145,7 @@ export function HelperCompanion() {
                 />
               ))}
             </div>
-            <span id="pairing-guidance">The code comes from EasyWeb Home in the senior’s browser.</span>
+            <span id="pairing-guidance">Shown on EasyWeb Home.</span>
             <label htmlFor="helper-name">Your name</label>
             <input
               autoComplete="name"
@@ -255,6 +254,21 @@ type BookmarkEditor = {
   address: string;
 };
 
+const companionDemoSites = [
+  {
+    site: demoSites.healthplus,
+    description: "Healthcare information and appointments",
+  },
+  {
+    site: demoSites.vitaglow,
+    description: "Suspicious shopping page",
+  },
+  {
+    site: demoSites.robloxLookalike,
+    description: "Lookalike login page",
+  },
+];
+
 function HelperBookmarks({ seniorName }: { seniorName: string }) {
   const { bookmarks, saveBookmarks } = useBookmarks();
   const [editor, setEditor] = useState<BookmarkEditor | null>(null);
@@ -320,6 +334,24 @@ function HelperBookmarks({ seniorName }: { seniorName: string }) {
     setStatus(`${bookmark.name} was removed from ${seniorName}’s bookmarks.`);
   }
 
+  function addDemoBookmark(name: string, demoAddress: string) {
+    const address = normalizeBookmarkAddress(demoAddress);
+    if (!address) return;
+
+    const alreadyAdded = bookmarks.some(
+      (bookmark) => normalizeBookmarkAddress(bookmark.address) === address,
+    );
+    if (alreadyAdded) {
+      setStatus(`${name} is already in ${seniorName}’s bookmarks.`);
+      return;
+    }
+
+    saveBookmarks([...bookmarks, { id: makeBookmarkId(), name, address }]);
+    setEditor(null);
+    setError("");
+    setStatus(`${name} was added for ${seniorName}.`);
+  }
+
   return (
     <section className="helper-bookmarks" aria-labelledby="bookmarks-title">
       <div className="helper-bookmarks-heading">
@@ -367,6 +399,35 @@ function HelperBookmarks({ seniorName }: { seniorName: string }) {
           </div>
         </form>
       )}
+
+      <section className="demo-bookmarks" aria-labelledby="demo-bookmarks-title">
+        <h3 id="demo-bookmarks-title">Demo websites</h3>
+        <div>
+          {companionDemoSites.map(({ site, description }) => {
+            const isAdded = bookmarks.some(
+              (bookmark) => normalizeBookmarkAddress(bookmark.address) === normalizeBookmarkAddress(site.address),
+            );
+            return (
+              <article key={site.id}>
+                <div>
+                  <strong>{site.id === "robloxLookalike" ? site.address : site.shortName}</strong>
+                  <span>{description}</span>
+                </div>
+                <button
+                  disabled={isAdded}
+                  onClick={() => addDemoBookmark(
+                    site.id === "robloxLookalike" ? site.address : site.shortName,
+                    site.address,
+                  )}
+                  type="button"
+                >
+                  {isAdded ? "Added" : "Add bookmark"}
+                </button>
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
       {bookmarks.length === 0 ? (
         <div className="empty-helper-bookmarks">

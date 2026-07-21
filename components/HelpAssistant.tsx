@@ -96,11 +96,11 @@ const homeIntents: ScriptedIntent<HealthPlusHelpAnswer>[] = [
       /\b(can|does) .* see everything\b/,
       /\bwhat can .* access\b/,
     ],
-    response: () => ({ answer: "Your trusted helper can add useful bookmarks and respond when you ask for help. They cannot see your normal browsing or anything you type into forms." }),
+    response: () => ({ answer: "Your helper can add bookmarks and reply when you ask. They cannot see your browsing or anything you type into forms." }),
   },
   {
     patterns: [/\b(bookmark|bookmarks|saved websites?|website shortcuts?)\b/],
-    response: () => ({ answer: "Bookmarks are shortcuts to websites you use often. Your trusted helper can add, edit, or remove them for you." }),
+    response: () => ({ answer: "Bookmarks open websites you use often. Your helper can add, edit, or remove them." }),
   },
   {
     patterns: [
@@ -111,7 +111,7 @@ const homeIntents: ScriptedIntent<HealthPlusHelpAnswer>[] = [
   },
   {
     patterns: [/\b(return|go|back) home\b/, /\bhome button\b/],
-    response: () => ({ answer: "Select Home in the EasyWeb toolbar to return to your bookmarks and the Try demo scenarios option." }),
+    response: () => ({ answer: "Select Home to return to your bookmarks." }),
   },
   {
     patterns: [/\b(go back|back button|arrows?|forward button|previous page|next page)\b/],
@@ -203,7 +203,7 @@ const externalIntents: ScriptedIntent<HealthPlusHelpAnswer>[] = [
   },
   {
     patterns: [/\b(return|go|back) home\b/, /\bhome button\b/],
-    response: () => ({ answer: "Choose Home in the EasyWeb toolbar to return to your bookmarks and demo scenarios." }),
+    response: () => ({ answer: "Choose Home to return to your bookmarks." }),
   },
 ];
 
@@ -238,7 +238,7 @@ function getAssistantProfile(currentPage: BrowserPage): AssistantProfile {
     return {
       answer: answerHomeQuestion,
       heading: "Ask EasyWeb",
-      intro: "I can help you find a website, understand something online, or decide where to go.",
+      intro: "Find a website or ask for help.",
       placeholder: "For example: How do I search the web?",
       suggestions: homeSuggestions,
     };
@@ -248,7 +248,7 @@ function getAssistantProfile(currentPage: BrowserPage): AssistantProfile {
     return {
       answer: answerHealthPlusQuestion,
       heading: "Ask about this HealthPlus page",
-      intro: "Ask about HealthPlus Clinic appointments, hours, insurance, services, or contact details.",
+      intro: "Ask about appointments, hours, insurance, or services.",
       placeholder: "For example: What are the office hours?",
       suggestions: healthPlusSuggestedQuestions,
     };
@@ -258,7 +258,7 @@ function getAssistantProfile(currentPage: BrowserPage): AssistantProfile {
     return {
       answer: answerVitaGlowQuestion,
       heading: "Ask about this VitaGlow page",
-      intro: "I can explain the warning signs EasyWeb found on this controlled demo store.",
+      intro: "Ask about the warning signs on this page.",
       placeholder: "For example: Why is EasyWeb warning me?",
       suggestions: vitaGlowSuggestions,
     };
@@ -268,7 +268,7 @@ function getAssistantProfile(currentPage: BrowserPage): AssistantProfile {
     return {
       answer: answerLookalikeQuestion,
       heading: "Ask about this address warning",
-      intro: "I can explain what EasyWeb noticed about rob1ox.com and how to leave safely.",
+      intro: "Ask about this address or how to leave.",
       placeholder: "For example: What is different about this address?",
       suggestions: lookalikeSuggestions,
     };
