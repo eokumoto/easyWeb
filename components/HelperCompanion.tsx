@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useBookmarks } from "@/components/BookmarkProvider";
 import { useHelperConnection } from "@/components/HelperConnectionProvider";
@@ -256,16 +256,29 @@ type BookmarkEditor = {
 
 const companionDemoSites = [
   {
+    name: "HealthPlus",
     site: demoSites.healthplus,
     description: "Healthcare information and appointments",
   },
   {
+    name: "VitaGlow",
     site: demoSites.vitaglow,
     description: "Suspicious shopping page",
   },
   {
+    name: "rob1ox.com",
     site: demoSites.robloxLookalike,
     description: "Lookalike login page",
+  },
+  {
+    name: "Pharmacy",
+    site: demoSites.pharmacy,
+    description: "Prescription and pharmacy information",
+  },
+  {
+    name: "Utility Billing",
+    site: demoSites.utility,
+    description: "Utility account and billing information",
   },
 ];
 
@@ -274,6 +287,16 @@ function HelperBookmarks({ seniorName }: { seniorName: string }) {
   const [editor, setEditor] = useState<BookmarkEditor | null>(null);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [showDemoSites, setShowDemoSites] = useState(false);
+
+  useEffect(() => {
+    if (!showDemoSites) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowDemoSites(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showDemoSites]);
 
   function openAddForm() {
     setEditor({ id: null, name: "", address: "" });
@@ -359,7 +382,20 @@ function HelperBookmarks({ seniorName }: { seniorName: string }) {
           <p className="landing-eyebrow">Shared with {seniorName}</p>
           <h2 id="bookmarks-title">Bookmarks for {seniorName}</h2>
         </div>
-        {!editor && <button onClick={openAddForm} type="button">Add bookmark</button>}
+        <div className="helper-bookmarks-actions">
+          <button
+            className="demo-websites-action"
+            onClick={() => setShowDemoSites(true)}
+            type="button"
+          >
+            Demo websites
+          </button>
+          {!editor && (
+            <button className="add-bookmark-action" onClick={openAddForm} type="button">
+              Add bookmark
+            </button>
+          )}
+        </div>
       </div>
 
       {editor && (
@@ -400,34 +436,54 @@ function HelperBookmarks({ seniorName }: { seniorName: string }) {
         </form>
       )}
 
-      <section className="demo-bookmarks" aria-labelledby="demo-bookmarks-title">
-        <h3 id="demo-bookmarks-title">Demo websites</h3>
-        <div>
-          {companionDemoSites.map(({ site, description }) => {
-            const isAdded = bookmarks.some(
-              (bookmark) => normalizeBookmarkAddress(bookmark.address) === normalizeBookmarkAddress(site.address),
-            );
-            return (
-              <article key={site.id}>
-                <div>
-                  <strong>{site.id === "robloxLookalike" ? site.address : site.shortName}</strong>
-                  <span>{description}</span>
-                </div>
-                <button
-                  disabled={isAdded}
-                  onClick={() => addDemoBookmark(
-                    site.id === "robloxLookalike" ? site.address : site.shortName,
-                    site.address,
-                  )}
-                  type="button"
-                >
-                  {isAdded ? "Added" : "Add bookmark"}
-                </button>
-              </article>
-            );
-          })}
+      {showDemoSites && (
+        <div
+          className="dialog-backdrop demo-bookmarks-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowDemoSites(false);
+          }}
+        >
+          <section
+            aria-labelledby="demo-bookmarks-title"
+            aria-modal="true"
+            className="demo-bookmarks-dialog"
+            role="dialog"
+          >
+            <div className="demo-bookmarks-heading">
+              <h3 id="demo-bookmarks-title">Demo websites</h3>
+              <button
+                aria-label="Close demo websites"
+                onClick={() => setShowDemoSites(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+            <div className="demo-bookmarks">
+              {companionDemoSites.map(({ name, site, description }) => {
+                const isAdded = bookmarks.some(
+                  (bookmark) => normalizeBookmarkAddress(bookmark.address) === normalizeBookmarkAddress(site.address),
+                );
+                return (
+                  <article key={site.id}>
+                    <div>
+                      <strong>{name}</strong>
+                      <span>{description}</span>
+                    </div>
+                    <button
+                      disabled={isAdded}
+                      onClick={() => addDemoBookmark(name, site.address)}
+                      type="button"
+                    >
+                      {isAdded ? "Added" : "Add bookmark"}
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
         </div>
-      </section>
+      )}
 
       {bookmarks.length === 0 ? (
         <div className="empty-helper-bookmarks">
@@ -469,6 +525,8 @@ function HelperRequestCard({ request }: { request: HelpRequest }) {
     : "Do not enter your card information.";
   const [message, setMessage] = useState(defaultMessage);
   const [sentMessage, setSentMessage] = useState("");
+  const isQuestion = request.reason.startsWith("Question: ");
+  const requestReason = isQuestion ? request.reason.slice("Question: ".length) : request.reason;
 
   function sendWarning() {
     sendHelperResponse(request.id, message);
@@ -488,8 +546,12 @@ function HelperRequestCard({ request }: { request: HelpRequest }) {
         <time dateTime={request.createdAt}>{formatRequestTime(request.createdAt)}</time>
       </div>
       <div className="helper-request-reason">
-        <strong>Why EasyWeb raised concern</strong>
-        <p>{request.reason}</p>
+        <strong>
+          {isQuestion
+            ? `${state.seniorDisplayName.trim()} asked about ${request.websiteName}:`
+            : "Why EasyWeb raised concern"}
+        </strong>
+        <p>{requestReason}</p>
       </div>
       <label htmlFor={`helper-message-${request.id}`}>
         Message to {state.seniorDisplayName.trim()}

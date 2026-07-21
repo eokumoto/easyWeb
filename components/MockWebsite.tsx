@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useHelperConnection } from "@/components/HelperConnectionProvider";
 import { demoSites, type DemoSiteId } from "@/lib/demoSites";
 import { healthPlusData } from "@/lib/healthPlusData";
+import type { RiskCategory } from "@/lib/helperConnection";
 
 export function MockWebsite({
   onLeaveSite,
@@ -234,12 +235,137 @@ function UtilitySite() {
   );
 }
 
-function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
+function HelperRequestFlow({
+  address,
+  context,
+  quickMessages,
+  riskCategory,
+  siteName,
+  triggerClassName,
+}: {
+  address: string;
+  context: string;
+  quickMessages?: readonly string[];
+  riskCategory: RiskCategory;
+  siteName: string;
+  triggerClassName?: string;
+}) {
   const { createHelpRequest, state } = useHelperConnection();
+  const [isOpen, setIsOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+  const idSuffix = address.replace(/[^a-z\d]/gi, "-");
+  const descriptionId = `helper-description-${idSuffix}`;
+  const messageId = `helper-message-${idSuffix}`;
+  const titleId = `helper-title-${idSuffix}`;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    messageRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
+  function openRequest() {
+    if (state.connectionStatus !== "connected") {
+      setConfirmation("No helper connected.");
+      return;
+    }
+    setConfirmation("");
+    setIsOpen(true);
+  }
+
+  function sendRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) return;
+
+    const sent = createHelpRequest({
+      websiteName: siteName,
+      address,
+      reason: `Question: ${trimmedMessage}\nContext: ${context}`,
+      riskCategory,
+    });
+    setConfirmation(sent ? "Sent to your helper." : "No helper connected.");
+    if (sent) {
+      setMessage("");
+      setIsOpen(false);
+    }
+  }
+
+  return (
+    <>
+      <button className={triggerClassName} onClick={openRequest} type="button">
+        Ask My Helper
+      </button>
+      {confirmation && (
+        <p className="helper-request-confirmation" role="status">
+          {confirmation}
+        </p>
+      )}
+      {isOpen && (
+        <div
+          className="checkout-warning-backdrop helper-question-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsOpen(false);
+          }}
+        >
+          <section
+            aria-describedby={descriptionId}
+            aria-labelledby={titleId}
+            aria-modal="true"
+            className="helper-question-dialog"
+            role="dialog"
+          >
+            <h2 id={titleId}>Ask My Helper</h2>
+            <p id={descriptionId}>Send a message about this page.</p>
+            <form onSubmit={sendRequest}>
+              {quickMessages && quickMessages.length > 0 && (
+                <div className="helper-quick-messages" aria-label="Optional quick messages">
+                  {quickMessages.slice(0, 2).map((quickMessage) => (
+                    <button
+                      key={quickMessage}
+                      onClick={() => {
+                        setMessage(quickMessage);
+                        messageRef.current?.focus();
+                      }}
+                      type="button"
+                    >
+                      {quickMessage}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <label htmlFor={messageId}>Message</label>
+              <textarea
+                id={messageId}
+                maxLength={200}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="What would you like to ask?"
+                ref={messageRef}
+                rows={3}
+                value={message}
+              />
+              <div className="helper-request-dialog-actions">
+                <button onClick={() => setIsOpen(false)} type="button">Cancel</button>
+                <button disabled={!message.trim()} type="submit">Send</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+    </>
+  );
+}
+
+function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
   const [secondsLeft, setSecondsLeft] = useState(9 * 60 + 47);
   const [showCheckoutWarning, setShowCheckoutWarning] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [helpRequestMessage, setHelpRequestMessage] = useState("");
   const checkoutRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -256,20 +382,6 @@ function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
     setShowCheckout(true);
     setShowCheckoutWarning(false);
     window.setTimeout(() => checkoutRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
-  }
-
-  function askHelper() {
-    const shared = createHelpRequest({
-      websiteName: demoSites.vitaglow.name,
-      address: demoSites.vitaglow.address,
-      reason: "EasyWeb found exaggerated health claims, time pressure, unclear company details, and a request for payment information.",
-      riskCategory: "payment",
-    });
-    setHelpRequestMessage(
-      shared
-        ? `Shared with ${state.helperDisplayName}. Only this page’s name, address, and payment warning were shared.`
-        : "No helper connected. Return Home to connect one.",
-    );
   }
 
   return (
@@ -293,6 +405,15 @@ function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
           <li>It is not clear who owns the company or where it is located.</li>
           <li>Contact details are limited, and the refund rules are hard to find.</li>
         </ul>
+        <div className="safety-review-actions">
+          <HelperRequestFlow
+            address={demoSites.vitaglow.address}
+            context="Suspicious shopping website with several warning signs."
+            quickMessages={["Does this look safe?", "Should I buy from this site?"]}
+            riskCategory="payment"
+            siteName={demoSites.vitaglow.shortName}
+          />
+        </div>
       </aside>
 
       <header className="vitaglow-header">
@@ -392,13 +513,7 @@ function VitaGlowSite({ onLeaveSite }: { onLeaveSite: () => void }) {
             <div className="checkout-warning-actions">
               <button className="warning-leave" onClick={onLeaveSite} type="button">Leave this website</button>
               <button className="warning-continue" onClick={continueToCheckout} type="button">Continue anyway</button>
-              <button className="warning-helper" onClick={askHelper} type="button">Ask my helper</button>
             </div>
-            {helpRequestMessage && (
-              <p className="helper-request-confirmation" role="status">
-                {helpRequestMessage}
-              </p>
-            )}
           </section>
         </div>
       )}
@@ -413,23 +528,6 @@ function LookalikeSite({
   onLeaveSite: () => void;
   onNavigate: (siteId: DemoSiteId) => void;
 }) {
-  const { createHelpRequest, state } = useHelperConnection();
-  const [helpRequestMessage, setHelpRequestMessage] = useState("");
-
-  function askHelper() {
-    const shared = createHelpRequest({
-      websiteName: demoSites.robloxLookalike.name,
-      address: demoSites.robloxLookalike.address,
-      reason: "EasyWeb found an address using the number 1 instead of the letter l on a page asking for a password.",
-      riskCategory: "password",
-    });
-    setHelpRequestMessage(
-      shared
-        ? `Shared with ${state.helperDisplayName}. Only this page’s name, address, and password warning were shared.`
-        : "No helper connected. Return Home to connect one.",
-    );
-  }
-
   return (
     <article className="mock-site lookalike-site">
       <DemoBanner siteId="robloxLookalike" />
@@ -469,15 +567,15 @@ function LookalikeSite({
           <button className="lookalike-leave-action" onClick={onLeaveSite} type="button">
             Leave this website
           </button>
-          <button className="lookalike-helper-action" onClick={askHelper} type="button">
-            Ask my helper
-          </button>
+          <HelperRequestFlow
+            address={demoSites.robloxLookalike.address}
+            context="Lookalike login page asking for a password."
+            quickMessages={["Does this website look real?", "Should I enter my password?"]}
+            riskCategory="password"
+            siteName={demoSites.robloxLookalike.address}
+            triggerClassName="lookalike-helper-action"
+          />
         </div>
-        {helpRequestMessage && (
-          <p className="helper-request-confirmation" role="status">
-            {helpRequestMessage}
-          </p>
-        )}
       </section>
 
       <section className="lookalike-login" aria-labelledby="lookalike-login-title">
