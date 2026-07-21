@@ -4,7 +4,7 @@
 
 EasyWeb is a browser designed to help people who feel less confident online understand websites, recognize potential scams, and ask someone they trust for help when needed.
 
-It was inspired by watching members of my own family struggle with modern websites—not because they lacked intelligence, but because today's internet has become increasingly complicated.
+It was inspired by watching members of my own family struggle with modern websites; not because they lacked intelligence, but because today's internet has become increasingly complicated.
 
 ---
 
@@ -133,7 +133,7 @@ Future versions of EasyWeb will support:
 
 EasyWeb was inspired by my own family.
 
-Watching older family members navigate modern websites made me realize that many people don't struggle because they lack the ability to use technology—they struggle because today's internet has become overwhelming.
+Watching older family members navigate modern websites made me realize that many people don't struggle because they lack the ability to use technology; they struggle because today's internet has become overwhelming.
 
 EasyWeb was built to make browsing feel less intimidating and help people understand what's in front of them before they click.
 
